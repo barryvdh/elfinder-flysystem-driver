@@ -1,0 +1,27 @@
+{
+    "name": "barryvdh/elfinder-flysystem-driver",
+    "description": "A Flysystem Driver for elFinder",
+    "license": "MIT",
+    "keywords": ["elfinder", "flysystem", "filesystem"],
+    "authors": [
+        {
+            "name": "Barry vd. Heuvel",
+            "email": "barryvdh@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "league/flysystem": "~1.0"
+    },
+    "suggest": {
+        "barryvdh/elfinder-builds": "~2.1"
+    }
+    "autoload": {
+         "classmap": ["src"]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}
