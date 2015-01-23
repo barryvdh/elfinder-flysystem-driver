@@ -359,7 +359,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     {
         $path = $this->_joinPath($dir, $name);
 
-        if ($this->fs->writeStream($path, $fp)) {
+        if ($this->fs->updateStream($path, $fp)) {
             return $path;
         }
 
