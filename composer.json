@@ -15,7 +15,7 @@
     },
     "suggest": {
         "barryvdh/elfinder-builds": "~2.1"
-    }
+    },
     "autoload": {
          "classmap": ["src"]
     },
