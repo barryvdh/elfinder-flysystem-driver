@@ -1,6 +1,7 @@
 <?php
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
+use League\Glide\Factories\UrlBuilder;
 
 /**
  * elFinder driver for Flysytem (https://github.com/thephpleague/flysystem)
@@ -21,6 +22,9 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     /** @var FilesystemInterface $fs */
     protected $fs;
 
+    /** @var UrlBuilder $urlBuilder */
+    protected $urlBuilder = null;
+
     /**
      * Constructor
      * Extend options with required fields
@@ -30,6 +34,8 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     {
         $opts = array(
             'filesystem' => null,
+            'glideURL' => null,
+            'glideKey' => null,
         );
 
         $this->options = array_merge($this->options, $opts);
@@ -85,6 +91,10 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
 
         $this->options['icon'] = $this->options['icon'] ?: $this->getIcon();
         $this->root = $this->options['path'];
+
+        if ($this->options['glideURL']) {
+            $this->urlBuilder = UrlBuilder::create($this->options['glideURL'], $this->options['glideKey']);
+        }
 
         return true;
     }
@@ -156,6 +166,16 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
         $meta = $this->fs->getMetadata($path);
         if ($meta['type'] == 'file') {
             $stat['mime'] = $this->fs->getMimetype($path);
+
+            $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
+            if ($this->urlBuilder && in_array($stat['mime'], $imgMimes)) {
+                $stat['url'] = $this->urlBuilder->getUrl($path);
+                $stat['tmb'] = $this->urlBuilder->getUrl($path, [
+                    'w' => $this->tmbSize,
+                    'h' => $this->tmbSize,
+                    'fit' => $this->options['tmbCrop'] ? 'crop' : 'contain',
+                ]);
+            }
         }
 
         // Get timestamp/size

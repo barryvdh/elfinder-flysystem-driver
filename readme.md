@@ -39,6 +39,20 @@ You can use the driver by setting the connector config to Flysystem.
 
 The `path` and `URL` options are optional. The path defaults to '/', the URL is only possible when the file is visible through an URL.
 
+### Thumbnails through Glide
+
+If you require [Glide](https://github.com/thephpleague/glide), you can show thumbnails for your images.
+
+    [
+        'driver' => 'Flysystem', 
+        'filesystem' => $fs,
+        'glideURL' => 'http://domain.com/glideserver',
+        'glideKey' => 'your-sign-key',
+    ],
+
+You can still use the tmbSize and tmbCrop options from the [configuration options](https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options-2.1#root-options)
+    
+
 ### License
 
 This elFinder driver is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
