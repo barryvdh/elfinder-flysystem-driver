@@ -58,14 +58,12 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
             $adapter = null;
         }
 
-        if ($adapter instanceof League\Flysystem\Adapter\Local) {
-            $icon = 'volume_icon_local.png';
-        } elseif ($adapter instanceof League\Flysystem\Adapter\AbstractFtpAdapter) {
+        if ($adapter instanceof League\Flysystem\Adapter\AbstractFtpAdapter) {
             $icon = 'volume_icon_ftp.png';
         } elseif ($adapter instanceof League\Flysystem\Dropbox\DropboxAdapter) {
             $icon = 'volume_icon_dropbox.png';
         } else {
-            $icon = 'volume_icon_flysystem.png';
+            $icon = 'volume_icon_local.png';
         }
 
         $parentUrl = defined('ELFINDER_IMG_PARENT_URL')? (rtrim(ELFINDER_IMG_PARENT_URL, '/').'/') : '';
