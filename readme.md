@@ -41,7 +41,7 @@ The `path` and `URL` options are optional. The path defaults to '/', the URL is 
 
 ### Thumbnails through Glide
 
-If you require [Glide](https://github.com/thephpleague/glide), you can show thumbnails for your images.
+If you require [Glide](https://github.com/thephpleague/glide), you can show thumbnails for your images and generate secure urls.
 
     [
         'driver' => 'Flysystem', 
@@ -51,7 +51,9 @@ If you require [Glide](https://github.com/thephpleague/glide), you can show thum
     ],
 
 You can still use the tmbSize and tmbCrop options from the [configuration options](https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options-2.1#root-options)
-    
+
+This will require you to setup a basic server with Glide, see http://glide.thephpleague.com/
+A signKey is optional, but can help secure your images against changing parameters.    
 
 ### License
 
