@@ -53,7 +53,11 @@ If you require [Glide](https://github.com/thephpleague/glide), you can show thum
 You can still use the tmbSize and tmbCrop options from the [configuration options](https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options-2.1#root-options)
 
 This will require you to setup a basic server with Glide, see http://glide.thephpleague.com/
-A signKey is optional, but can help secure your images against changing parameters.    
+A signKey is optional, but can help secure your images against changing parameters.
+
+> Note: When securing image, you need to remove the `_` parameter from your Request object:
+> `$request->query->remove('_');`
+> Otherwise the signature will fail. The `_` parameter is used to disable caching.    
 
 ### License
 
