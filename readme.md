@@ -11,30 +11,31 @@ See https://github.com/thephpleague/flysystem for more information.
 
 You can use the driver by setting the connector config to Flysystem.
 
-'roots' => [
-    [
-        'driver' => 'Flysystem', 
-        'path' => 'images',
-        'URL' => '/images', 
-        'filesystem' => new Filesystem(new LocalAdapter('/path/to/public_html'))
-    ],
-    [
-        'driver' => 'Flysystem',
-        'URL' => 'http://mydomain.com/content',
-        'alias' => 'Mydomain.com',
-        'filesystem' => new Filesystem(new FtpAdapter(
-                [
-                    'host' => 'mydomain.com',
-                    'username' => 'user',
-                    'password' => '****',
-                    'root' => '/domains/mydomain.com/public_html/content',
-                ]
-            )),
-    ],
-    [
-        'driver' => 'Flysystem',
-        'adapter' => new DropboxAdapter(new Dropbox\Client($token, $appName))
-    ],
+    'roots' => [
+        [
+            'driver' => 'Flysystem', 
+            'path' => 'images',
+            'URL' => '/images', 
+            'filesystem' => new Filesystem(new LocalAdapter('/path/to/public_html'))
+        ],
+        [
+            'driver' => 'Flysystem',
+            'URL' => 'http://mydomain.com/content',
+            'alias' => 'Mydomain.com',
+            'filesystem' => new Filesystem(new FtpAdapter(
+                    [
+                        'host' => 'mydomain.com',
+                        'username' => 'user',
+                        'password' => '****',
+                        'root' => '/domains/mydomain.com/public_html/content',
+                    ]
+                )),
+        ],
+        [
+            'driver' => 'Flysystem',
+            'adapter' => new DropboxAdapter(new Dropbox\Client($token, $appName))
+        ],
+    ];
 
 The `path` and `URL` options are optional. The path defaults to '/', the URL is only possible when the file is visible through an URL.
 
