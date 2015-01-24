@@ -39,7 +39,7 @@ You can use the driver by setting the connector config to Flysystem.
 
 The `path` and `URL` options are optional. The path defaults to '/', the URL is only possible when the file is visible through an URL.
 
-### Thumbnails through Glide
+### Displaying thumbnails/images through Glide
 
 If you require [Glide](https://github.com/thephpleague/glide), you can show thumbnails for your images and generate secure urls.
 
