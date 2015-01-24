@@ -1,4 +1,6 @@
 <?php
+
+use Intervention\Image\ImageManager;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
 use League\Glide\Factories\UrlBuilder;
@@ -25,6 +27,9 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     /** @var UrlBuilder $urlBuilder */
     protected $urlBuilder = null;
 
+    /** @var ImageManager $imageManager */
+    protected $imageManager = null;
+
     /**
      * Constructor
      * Extend options with required fields
@@ -36,6 +41,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
             'filesystem' => null,
             'glideURL' => null,
             'glideKey' => null,
+            'imageManager' => null,
         );
 
         $this->options = array_merge($this->options, $opts);
@@ -94,6 +100,12 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
 
         if ($this->options['glideURL']) {
             $this->urlBuilder = UrlBuilder::create($this->options['glideURL'], $this->options['glideKey']);
+        }
+
+        if ($this->options['imageManager']) {
+            $this->imageManager = $this->options['imageManager'];
+        } else {
+            $this->imageManager = new ImageManager();
         }
 
         return true;
@@ -509,5 +521,77 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     protected function _checkArchivers()
     {
         return;
+    }
+
+    /**
+     * Resize image
+     *
+     * @param  string   $hash    image file
+     * @param  int      $width   new width
+     * @param  int      $height  new height
+     * @param  int      $x       X start poistion for crop
+     * @param  int      $y       Y start poistion for crop
+     * @param  string   $mode    action how to mainpulate image
+     * @return array|false
+     * @author Dmitry (dio) Levashov
+     * @author Alexey Sukhotin
+     * @author nao-pon
+     * @author Troex Nevelin
+     **/
+    public function resize($hash, $width, $height, $x, $y, $mode = 'resize', $bg = '', $degree = 0) {
+        if ($this->commandDisabled('resize')) {
+            return $this->setError(elFinder::ERROR_PERM_DENIED);
+        }
+
+        if (($file = $this->file($hash)) == false) {
+            return $this->setError(elFinder::ERROR_FILE_NOT_FOUND);
+        }
+
+        if (!$file['write'] || !$file['read']) {
+            return $this->setError(elFinder::ERROR_PERM_DENIED);
+        }
+
+        $path = $this->decode($hash);
+        if (!$this->canResize($path, $file)) {
+            return $this->setError(elFinder::ERROR_UNSUPPORT_TYPE);
+        }
+
+        if (!$image = $this->imageManager->make($this->_getContents($path))) {
+            return false;
+        }
+
+        switch($mode) {
+            case 'propresize':
+                $image->resize($width, $height, function($constraint){
+                    $constraint->aspectRatio();
+                });
+                break;
+
+            case 'crop':
+                $image->crop($width, $height, $x, $y);
+                break;
+
+            case 'fitsquare':
+                $image->fit($width, $height, null, 'center');
+                break;
+
+            case 'rotate':
+                $image->rotate($degree);
+                break;
+
+            default:
+                $image->resize($width, $height);
+                break;
+        }
+
+        $result = (string) $image->encode();
+        if ($result && $this->_filePutContents($path, $result)) {
+            $stat = $this->stat($path);
+            $stat['width'] = $image->width();
+            $stat['height'] = $image->height();
+            return $stat;
+        }
+
+        return false;
     }
 }
