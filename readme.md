@@ -1,4 +1,6 @@
 ## elFinder Flysystem Driver
+> This package adds a VolumeDriver for elFinder to use Flysystem as a root in your system. You need to have elFinder 2.1 installed.
+> You can download the source or nightlies from https://github.com/Studio-42/elFinder or use the Laravel version: https://github.com/barryvdh/laravel-elfinder
 
 Require this package in your composer.json and update composer. 
 
