@@ -174,6 +174,10 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
             return array();
         }
 
+        // Get timestamp/size
+        $stat['ts'] = $this->fs->getTimestamp($path);
+        $stat['size'] = $this->fs->getSize($path);
+
         // Check if file, if so, check mimetype
         $meta = $this->fs->getMetadata($path);
         if ($meta['type'] == 'file') {
@@ -181,18 +185,15 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
 
             $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
             if ($this->urlBuilder && in_array($stat['mime'], $imgMimes)) {
-                $stat['url'] = $this->urlBuilder->getUrl($path);
+                $stat['url'] = $this->urlBuilder->getUrl($path, ['ts' => $stat['ts']]);
                 $stat['tmb'] = $this->urlBuilder->getUrl($path, [
+                    'ts' => $stat['ts'],
                     'w' => $this->tmbSize,
                     'h' => $this->tmbSize,
                     'fit' => $this->options['tmbCrop'] ? 'crop' : 'contain',
                 ]);
             }
         }
-
-        // Get timestamp/size
-        $stat['ts'] = $this->fs->getTimestamp($path);
-        $stat['size'] = $this->fs->getSize($path);
 
         return $stat;
     }
