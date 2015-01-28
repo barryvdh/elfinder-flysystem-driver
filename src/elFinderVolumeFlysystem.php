@@ -372,7 +372,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     {
         $path = $this->_joinPath($dir, $name);
 
-        if ($this->fs->updateStream($path, $fp)) {
+        if ($this->fs->putStream($path, $fp)) {
             return $path;
         }
 
@@ -399,7 +399,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
      **/
     protected function _filePutContents($path, $content)
     {
-        return $this->fs->update($path, $content);
+        return $this->fs->put($path, $content);
     }
 
     /*********************** paths/urls *************************/
