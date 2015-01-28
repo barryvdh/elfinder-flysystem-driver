@@ -3,7 +3,7 @@
 use Intervention\Image\ImageManager;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
-use League\Glide\Factories\UrlBuilder;
+use League\Glide\Http\UrlBuilderFactory;
 
 /**
  * elFinder driver for Flysytem (https://github.com/thephpleague/flysystem)
@@ -24,7 +24,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     /** @var FilesystemInterface $fs */
     protected $fs;
 
-    /** @var UrlBuilder $urlBuilder */
+    /** @var \League\Glide\Http\UrlBuilder $urlBuilder */
     protected $urlBuilder = null;
 
     /** @var ImageManager $imageManager */
@@ -99,7 +99,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
         $this->root = $this->options['path'];
 
         if ($this->options['glideURL']) {
-            $this->urlBuilder = UrlBuilder::create($this->options['glideURL'], $this->options['glideKey']);
+            $this->urlBuilder = UrlBuilderFactory::create($this->options['glideURL'], $this->options['glideKey']);
         }
 
         if ($this->options['imageManager']) {

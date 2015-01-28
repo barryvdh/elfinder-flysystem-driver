@@ -16,7 +16,7 @@
     },
     "suggest": {
         "barryvdh/elfinder-builds": "~2.1",
-        "league/glide": "~0.2"
+        "league/glide": "~0.3"
     },
     "autoload": {
          "classmap": ["src"]
