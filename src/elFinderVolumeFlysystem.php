@@ -434,7 +434,7 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
      **/
     protected function _joinPath($dir, $name)
     {
-        return $dir.$this->separator.$name;
+        return Util::normalizePath($dir.$this->separator.$name);
     }
 
     /**
