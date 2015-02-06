@@ -208,7 +208,14 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
      **/
     protected function _subdirs($path)
     {
-        return count($this->fs->listContents($path)) > 0;
+        $ret = false;
+        foreach ($this->fs->listContents($path) as $meta) {
+            if ($meta['type'] !== 'file') {
+                $ret = true;
+                break;
+            }
+        }
+        return $ret;
     }
 
     /**
