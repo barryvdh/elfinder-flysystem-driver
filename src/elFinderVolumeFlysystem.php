@@ -177,8 +177,8 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
         $meta = $this->fs->getMetadata($path);
 
         // Get timestamp/size
-        $stat['ts'] = isset($meta['timestamp'])? $meta['timestamp'] : 0;
-        $stat['size'] = isset($meta['size'])? $meta['size'] : 0;
+        $stat['ts'] = isset($meta['timestamp'])? $meta['timestamp'] : $this->fs->getTimestamp($path);
+        $stat['size'] = isset($meta['size'])? $meta['size'] : $this->fs->getSize($path);
         
         // Check if file, if so, check mimetype
         if ($meta['type'] == 'file') {
