@@ -655,8 +655,15 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
         if (($file = $this->file($hash)) == false || !$file['url'] || $file['url'] == 1) {
             $url = '';
             if ($this->hasGetUrl) {
-                $path = $this->decode($hash);
-                $url = $this->adapter->getUrl($path);
+                try {
+                    $path = $this->decode($hash);
+                    $url = $this->adapter->getUrl($path);
+                    if (!is_string($url) || !($purl = parse_url($url)) || !isset($purl['scheme'])) {
+                        $url = '';
+                    }
+                } catch (\Exception $e) {
+                    $this->hasGetUrl = false;
+                }
             }
             return $url;
         }
