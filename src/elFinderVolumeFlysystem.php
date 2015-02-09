@@ -627,7 +627,8 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     * @param array   $options options
     * @return string
     **/
-    public function getContentUrl($hash, $options = array()) {
+    public function getContentUrl($hash, $options = array())
+    {
         if (($file = $this->file($hash)) == false || !$file['url'] || $file['url'] == 1) {
             $url = '';
             if ($this->hasGetUrl) {
