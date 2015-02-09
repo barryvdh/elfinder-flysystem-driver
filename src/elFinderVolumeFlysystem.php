@@ -101,7 +101,13 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
             return $this->setError('A filesystem instance is required');
         }
 
-        $this->adapter = $this->fs->getAdapter();
+        $adapter = $this->fs->getAdapter();
+        while (method_exists($adapter, 'getAdapter')) {
+            // for League\Flysystem\Cached\CachedAdapter etc
+            $adapter = $adapter->getAdapter();
+        }
+        $this->adapter = $adapter;
+
         if (method_exists($this->adapter, 'getUrl')) {
             $this->hasGetUrl = true;
         }
