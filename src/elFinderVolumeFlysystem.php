@@ -24,12 +24,18 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
     /** @var FilesystemInterface $fs */
     protected $fs;
 
+    /** @var AdapterInterface $adapter */
+    protected $adapter;
+
     /** @var \League\Glide\Http\UrlBuilder $urlBuilder */
     protected $urlBuilder = null;
 
     /** @var ImageManager $imageManager */
     protected $imageManager = null;
 
+    /** @var Adapter has getUrl method $hasGetUrl */
+    protected $hasGetUrl = false;
+    
     /**
      * Constructor
      * Extend options with required fields
@@ -93,6 +99,17 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
         $this->fs = $this->options['filesystem'];
         if (!($this->fs instanceof FilesystemInterface)) {
             return $this->setError('A filesystem instance is required');
+        }
+
+        $adapter = $this->fs->getAdapter();
+        while (method_exists($adapter, 'getAdapter')) {
+            // for League\Flysystem\Cached\CachedAdapter etc
+            $adapter = $adapter->getAdapter();
+        }
+        $this->adapter = $adapter;
+
+        if (method_exists($this->adapter, 'getUrl')) {
+            $this->hasGetUrl = true;
         }
 
         $this->options['icon'] = $this->options['icon'] ?: $this->getIcon();
@@ -194,6 +211,11 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
                     'fit' => $this->options['tmbCrop'] ? 'crop' : 'contain',
                 ]);
             }
+        }
+
+        // set async get URL when adapter has `getUrl()' method
+        if (! isset($stat['url']) && $this->hasGetUrl) {
+            $stat['url'] = 1;
         }
 
         return $stat;
@@ -620,4 +642,31 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
 		}
 		return $size;
 	}
+
+    /**
+    * Return content URL
+    *
+    * @param string  $hash    file hash
+    * @param array   $options options
+    * @return string
+    **/
+    public function getContentUrl($hash, $options = array())
+    {
+        if (($file = $this->file($hash)) == false || !$file['url'] || $file['url'] == 1) {
+            $url = '';
+            if ($this->hasGetUrl) {
+                try {
+                    $path = $this->decode($hash);
+                    $url = $this->adapter->getUrl($path);
+                    if (!is_string($url) || !($purl = parse_url($url)) || !isset($purl['scheme'])) {
+                        $url = '';
+                    }
+                } catch (\Exception $e) {
+                    $this->hasGetUrl = false;
+                }
+            }
+            return $url;
+        }
+        return $file['url'];
+    }
 }
