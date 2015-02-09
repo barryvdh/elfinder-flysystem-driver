@@ -1,5 +1,8 @@
 <?php
 
+namespace Barryvdh\elFinderFlysystemDriver;
+
+use elFinderVolumeDriver;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
@@ -10,7 +13,7 @@ use League\Glide\Http\UrlBuilderFactory;
  *
  * @author Barry vd. Heuvel
  * */
-class elFinderVolumeFlysystem extends elFinderVolumeDriver {
+class Driver extends elFinderVolumeDriver {
 
     /**
      * Driver id

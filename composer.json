@@ -19,7 +19,10 @@
         "league/glide": "~0.3"
     },
     "autoload": {
-         "classmap": ["src"]
+         "classmap": ["elFinderVolumeFlysystem.php"],
+         "psr-4": {
+            "Barryvdh\\elFinderFlysystemDriver\\": "src/"
+        }
     },
     "extra": {
         "branch-alias": {
