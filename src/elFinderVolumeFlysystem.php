@@ -251,7 +251,11 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
      **/
     protected function _dimensions($path, $mime)
     {
-        return false;
+        $ret = false;
+        if ($imgsize = $this->getImageSize($path, $mime)) {
+            $ret = $imgsize['dimensions'];
+        }
+        return $ret;
     }
 
     /******************** file/dir content *********************/
@@ -625,6 +629,19 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
 
         return false;
     }
+    
+    public function getImageSize($path, $mime = '')
+    {
+		$size = false;
+		if ($mime === '' || strtolower(substr($mime, 0, 5)) === 'image') {
+			if ($data = $this->_getContents($path)) {
+				if ($size = @getimagesizefromstring($data)) {
+					$size['dimensions'] = $size[0].'x'.$size[1];
+				}
+			}
+		}
+		return $size;
+	}
 
     /**
     * Return content URL
@@ -645,5 +662,4 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
         }
         return $file['url'];
     }
-
 }
