@@ -229,7 +229,11 @@ class elFinderVolumeFlysystem extends elFinderVolumeDriver {
      **/
     protected function _dimensions($path, $mime)
     {
-        return false;
+        $ret = false;
+        if ($imgsize = $this->getImageSize($path, $mime)) {
+            $ret = $imgsize['dimensions'];
+        }
+        return $ret;
     }
 
     /******************** file/dir content *********************/
