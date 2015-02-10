@@ -202,6 +202,10 @@ class Driver extends elFinderVolumeDriver {
             }
         }
 
+        if (! isset($stat['url']) && $this->fs->getUrl()) {
+            $stat['url'] = 1;
+        }
+
         return $stat;
     }
 
