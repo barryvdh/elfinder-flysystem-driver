@@ -15,6 +15,11 @@ class GetUrl extends AbstractPlugin
      * @var AdapterInterface
      */
     protected $adapter;
+    
+    /**
+     * @var Adapter has method getUrl()
+     */
+    private $hasMethod;
 
     /**
      * Set the Filesystem object.
@@ -33,6 +38,8 @@ class GetUrl extends AbstractPlugin
                 $this->adapter = $this->adapter->getAdapter();
             }
         }
+
+        $this->hasMethod = (method_exists($this->adapter, 'getUrl'));
 
 
     }
@@ -54,18 +61,18 @@ class GetUrl extends AbstractPlugin
      *
      * @return string|false
      */
-    public function handle($path)
+    public function handle($path = null)
     {
-        if ( ! $this->adapter) {
+        if (is_null($path)) {
+            return $this->hasMethod;
+        }
+
+        if ( ! $this->hasMethod) {
             return false;
         }
 
         //TODO: Check on actual implementations, not just an existing method
-        if (method_exists($this->adapter, 'getUrl')) {
-            return $this->adapter->getUrl($path);
-        }
-
-        return false;
+        return $this->adapter->getUrl($path);
     }
 
 }
