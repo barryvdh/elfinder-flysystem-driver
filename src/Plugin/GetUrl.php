@@ -19,7 +19,7 @@ class GetUrl extends AbstractPlugin
     /**
      * @var Adapter has method getUrl()
      */
-    private $hasMethod;
+    private $hasMethod = false;
 
     /**
      * Set the Filesystem object.
@@ -37,10 +37,10 @@ class GetUrl extends AbstractPlugin
             if ($this->adapter instanceof CachedAdapter) {
                 $this->adapter = $this->adapter->getAdapter();
             }
+
+            //TODO: Check on actual implementations, not just an existing method
+            $this->hasMethod = method_exists($this->adapter, 'getUrl');
         }
-
-        $this->hasMethod = (method_exists($this->adapter, 'getUrl'));
-
 
     }
 
@@ -71,7 +71,17 @@ class GetUrl extends AbstractPlugin
             return false;
         }
 
-        //TODO: Check on actual implementations, not just an existing method
+        return $this->getFromMethod($path);
+    }
+
+    /**
+     * Get the URL using a `getUrl()` method on the adapter.
+     *
+     * @param  string $path
+     * @return string
+     */
+    protected function getFromMethod($path)
+    {
         return $this->adapter->getUrl($path);
     }
 
