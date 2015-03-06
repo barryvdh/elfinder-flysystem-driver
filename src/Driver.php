@@ -393,8 +393,14 @@ class Driver extends elFinderVolumeDriver {
     protected function _save($fp, $dir, $name, $stat)
     {
         $path = $this->_joinPath($dir, $name);
+        $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-        if ($this->fs->putStream($path, $fp)) {
+        $config = [];
+        if (isset(self::$mimetypes[$ext])) {
+            $config['mimetype'] = self::$mimetypes[$ext];
+        }
+
+        if ($this->fs->putStream($path, $fp, $config)) {
             return $path;
         }
 
