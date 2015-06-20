@@ -552,6 +552,15 @@ class Driver extends elFinderVolumeDriver {
         return;
     }
 
+	/**
+	 * chmod implementation
+	 *
+	 * @return bool
+	 **/
+	protected function _chmod($path, $mode) {
+		return false;
+	}
+
     /**
      * Resize image
      *
