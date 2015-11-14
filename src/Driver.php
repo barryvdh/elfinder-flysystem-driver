@@ -140,6 +140,26 @@ class Driver extends elFinderVolumeDriver {
     }
 
     /**
+     * Check if the directory exists in the parent directory. Needed because not all drives handle directories correctly.
+     *
+     * @param  string  $path  path
+     * @return boolean
+     **/
+    protected function _dirExists($path)
+    {
+        $dir = $this->_dirname($path);
+        $basename = basename($path);
+        
+        foreach ($this->fs->listContents($dir) as $meta) {
+            if ($meta['type'] !== 'file' && $meta['basename'] == $basename) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Return stat for given path.
      * Stat contains following fields:
      * - (int)    size    file size in b. required
@@ -177,7 +197,14 @@ class Driver extends elFinderVolumeDriver {
 
         // If not exists, return empty
         if ( !$this->fs->has($path)) {
-            return array();
+            
+            // Check if the parent doesn't have this path
+            if ($this->_dirExists($path)) {
+                return $stat;
+            }
+            
+            // Neither a file or directory exist, return empty
+            return array();            
         }
 
         $meta = $this->fs->getMetadata($path);
