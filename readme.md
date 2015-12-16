@@ -16,14 +16,12 @@ You can use the driver by setting the connector config to Flysystem.
     'roots' => [
         [
             'driver' => 'Flysystem', 
-            'autoload' => true,
             'path' => 'images',
             'URL' => '/images', 
             'filesystem' => new Filesystem(new LocalAdapter('/path/to/public_html'))
         ],
         [
             'driver' => 'Flysystem',
-            'autoload' => true,
             'URL' => 'http://mydomain.com/content',
             'alias' => 'Mydomain.com',
             'filesystem' => new Filesystem(new FtpAdapter(
@@ -37,7 +35,6 @@ You can use the driver by setting the connector config to Flysystem.
         ],
         [
             'driver' => 'Flysystem',
-            'autoload' => true,
             'adapter' => new DropboxAdapter(new Dropbox\Client($token, $appName))
         ],
     ];
@@ -50,7 +47,6 @@ If you require [Glide](https://github.com/thephpleague/glide), you can show thum
 
     [
         'driver' => 'Flysystem', 
-        'autoload' => true,
         'filesystem' => $fs,
         'glideURL' => 'http://domain.com/glideserver',
         'glideKey' => 'your-sign-key',
