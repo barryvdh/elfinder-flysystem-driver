@@ -596,14 +596,17 @@ class Driver extends elFinderVolumeDriver {
      * @param  int      $height  new height
      * @param  int      $x       X start poistion for crop
      * @param  int      $y       Y start poistion for crop
-     * @param  string   $mode    action how to mainpulate image
+	 * @param  string   $mode    action how to mainpulate image
+	 * @param  string   $bg      background color
+	 * @param  int      $degree  rotete degree
+	 * @param  int      $jpgQuality  JEPG quality (1-100)
      * @return array|false
      * @author Dmitry (dio) Levashov
      * @author Alexey Sukhotin
      * @author nao-pon
      * @author Troex Nevelin
      **/
-    public function resize($hash, $width, $height, $x, $y, $mode = 'resize', $bg = '', $degree = 0) {
+    public function resize($hash, $width, $height, $x, $y, $mode = 'resize', $bg = '', $degree = 0, $jpgQuality = null) {
         if ($this->commandDisabled('resize')) {
             return $this->setError(elFinder::ERROR_PERM_DENIED);
         }
@@ -649,7 +652,11 @@ class Driver extends elFinderVolumeDriver {
                 break;
         }
 
-        $result = (string) $image->encode();
+        if ($jpgQuality && $image->mime() === 'image/jpeg') {
+        	$result = (string) $image->encode('jpg', $jpgQuality);
+        } else {
+        	$result = (string) $image->encode();
+        }
         if ($result && $this->_filePutContents($path, $result)) {
             $stat = $this->stat($path);
             $stat['width'] = $image->width();
