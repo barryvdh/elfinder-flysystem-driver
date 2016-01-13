@@ -515,7 +515,7 @@ class Driver extends elFinderVolumeDriver {
      **/
     protected function _path($path)
     {
-        return $path;
+        return $this->rootName.$this->separator.$path;
     }
 
     /**
