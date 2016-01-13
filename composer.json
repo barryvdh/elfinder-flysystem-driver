@@ -11,11 +11,11 @@
     ],
     "require": {
         "php": ">=5.4",
+        "studio-42/elfinder": "2.1.x",
         "league/flysystem": "~1.0",
         "intervention/image": "~2.0"
     },
     "suggest": {
-        "barryvdh/elfinder-builds": "~2.1",
         "league/glide": "~0.3"
     },
     "autoload": {
