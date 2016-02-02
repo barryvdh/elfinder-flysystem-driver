@@ -16,7 +16,7 @@
         "intervention/image": "~2.0"
     },
     "suggest": {
-        "league/glide": "~0.3"
+        "league/glide": "1.x to display images through Glide"
     },
     "autoload": {
          "classmap": ["elFinderVolumeFlysystem.php"],
