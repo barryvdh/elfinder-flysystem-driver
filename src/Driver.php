@@ -6,7 +6,7 @@ use elFinderVolumeDriver;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
-use League\Glide\Http\UrlBuilderFactory;
+use League\Glide\Urls\UrlBuilderFactory;
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
 
 /**
