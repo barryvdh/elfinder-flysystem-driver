@@ -8,6 +8,7 @@ use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
 use League\Glide\Urls\UrlBuilderFactory;
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
+use Barryvdh\elFinderFlysystemDriver\Plugin\HasDir;
 
 /**
  * elFinder driver for Flysytem (https://github.com/thephpleague/flysystem)
@@ -100,6 +101,7 @@ class Driver extends elFinderVolumeDriver {
         }
 
         $this->fs->addPlugin(new GetUrl());
+        $this->fs->addPlugin(new HasDir());
 
         $this->options['icon'] = $this->options['icon'] ?: $this->getIcon();
         $this->root = $this->options['path'];
@@ -247,10 +249,14 @@ class Driver extends elFinderVolumeDriver {
     protected function _subdirs($path)
     {
         $ret = false;
-        foreach ($this->fs->listContents($path) as $meta) {
-            if ($meta['type'] !== 'file') {
-                $ret = true;
-                break;
+        if ($this->fs->hasDir()) {
+        	$ret = $this->fs->hasDir($path);
+        } else {
+            foreach ($this->fs->listContents($path) as $meta) {
+                if ($meta['type'] !== 'file') {
+                    $ret = true;
+                    break;
+                }
             }
         }
         return $ret;
