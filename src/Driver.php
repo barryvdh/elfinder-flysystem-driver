@@ -71,6 +71,9 @@ class Driver extends elFinderVolumeDriver {
     {
         try {
             $adapter = $this->fs->getAdapter();
+            while($adapter instanceof CachedAdapter) {
+                $adapter = $adapter->getAdapter();
+            }
         } catch (\Exception $e) {
             $adapter = null;
         }
