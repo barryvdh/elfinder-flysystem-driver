@@ -162,6 +162,20 @@ class Driver extends elFinderVolumeDriver {
     }
 
     /**
+     * Get item path from FS method result, It supports item ID based file system
+     * 
+     * @param boolean|array $result
+     * @param string $requestPath
+     */
+    protected function _resultPath($result, $requestPath)
+    {
+        if (! is_array($result)) {
+            $result = $this->fs->getMetaData($requestPath);
+        }
+        return ($result && isset($result['path']))? $result['path'] : false;
+    }
+
+    /**
      * Return stat for given path.
      * Stat contains following fields:
      * - (int)    size    file size in b. required
@@ -210,6 +224,11 @@ class Driver extends elFinderVolumeDriver {
         }
 
         $meta = $this->fs->getMetadata($path);
+
+        // Set item filename to `name` if exists
+        if (isset($meta['filename'])) {
+            $stat['name'] = $meta['filename'];
+        }
 
         // Get timestamp/size
         $stat['ts'] = isset($meta['timestamp'])? $meta['timestamp'] : $this->fs->getTimestamp($path);
@@ -333,11 +352,7 @@ class Driver extends elFinderVolumeDriver {
     {
         $path = $this->_joinPath($path, $name);
 
-        if ($this->fs->createDir($path)) {
-            return $path;
-        }
-
-        return false;
+        return $this->_resultPath($this->fs->createDir($path), $path);
     }
 
     /**
@@ -351,11 +366,7 @@ class Driver extends elFinderVolumeDriver {
     {
         $path = $this->_joinPath($path, $name);
 
-        if ($this->fs->write($path, '')) {
-            return $path;
-        }
-
-        return false;
+        return $this->_resultPath($this->fs->write($path, ''), $path);
     }
 
     /**
@@ -384,11 +395,7 @@ class Driver extends elFinderVolumeDriver {
     {
         $path = $this->_joinPath($target, $name);
 
-        if ($this->fs->rename($source, $path)) {
-            return $path;
-        }
-
-        return false;
+        return $this->_resultPath($this->fs->rename($source, $path), $path);
     }
 
     /**
@@ -433,9 +440,7 @@ class Driver extends elFinderVolumeDriver {
             $config['mimetype'] = self::$mimetypes[$ext];
         }
 
-        if ($this->fs->putStream($path, $fp, $config)) {
-            return $path;
-        }
+        return $this->_resultPath($this->fs->putStream($path, $fp, $config), $path);
 
         return false;
     }
