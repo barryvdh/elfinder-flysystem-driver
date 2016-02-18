@@ -29,6 +29,9 @@ class Driver extends elFinderVolumeDriver {
     /** @var FilesystemInterface $fs */
     protected $fs;
 
+    /** @var FilesystemCachedCacheInterface $fscache */
+    protected $fscache = null;
+
     /** @var \League\Glide\Http\UrlBuilder $urlBuilder */
     protected $urlBuilder = null;
 
@@ -98,6 +101,13 @@ class Driver extends elFinderVolumeDriver {
         $this->fs = $this->options['filesystem'];
         if (!($this->fs instanceof FilesystemInterface)) {
             return $this->setError('A filesystem instance is required');
+        }
+
+        // flysystem cache object instance (cached adapter dose not have method like a `getCache()`.
+        if (isset($this->options['fscache']) && interface_exists('\League\Flysystem\Cached\CacheInterface', false)) {
+            if ($this->options['fscache'] instanceof \League\Flysystem\Cached\CacheInterface) {
+                $this->fscache = $this->options['fscache'];
+            }
         }
 
         $this->fs->addPlugin(new GetUrl());
@@ -170,9 +180,19 @@ class Driver extends elFinderVolumeDriver {
     protected function _resultPath($result, $requestPath)
     {
         if (! is_array($result)) {
+            if ($this->fscache) {
+                $this->fscache->flush();
+            }
             $result = $this->fs->getMetaData($requestPath);
         }
-        return ($result && isset($result['path']))? $result['path'] : false;
+
+        $path = ($result && isset($result['path']))? $result['path'] : false;
+
+        if ($this->fscache && $path !== $requestPath) {
+			$this->fscache->storeMiss($requestPath);
+        }
+
+        return $path;
     }
 
     /**
@@ -379,7 +399,13 @@ class Driver extends elFinderVolumeDriver {
      **/
     protected function _copy($source, $target, $name)
     {
-        return $this->fs->copy($source, $this->_joinPath($target, $name));
+        $result = $this->fs->copy($source, $this->_joinPath($target, $name));
+
+        if ($result && $this->fscache) {
+            $this->fscache->flush();
+        }
+
+        return $result;
     }
 
     /**
