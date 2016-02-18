@@ -82,7 +82,12 @@ class HasDir extends AbstractPlugin
      */
     protected function getFromMethod($path)
     {
-        return $this->adapter->hasDir($path);
+        $res = $this->adapter->hasDir($path);
+        if (is_array($res)) {
+            return isset($res['hasdir'])? $res['hasdir'] : true;
+        } else {
+            return $res;
+        }
     }
 
 }
