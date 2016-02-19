@@ -130,6 +130,19 @@ class Driver extends elFinderVolumeDriver {
     }
 
     /**
+     * Configure after successfull mount.
+     *
+     * @return void
+     **/
+    protected function configure()
+    {
+        parent::configure();
+        if ($this->fscache && $this->isMyReload()) {
+            $this->fscache->flush();
+        }
+    }
+
+    /**
      * Return parent directory path
      *
      * @param  string  $path  file path
