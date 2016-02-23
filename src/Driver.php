@@ -202,7 +202,7 @@ class Driver extends elFinderVolumeDriver {
         $path = ($result && isset($result['path']))? $result['path'] : false;
 
         if ($this->fscache && $path !== $requestPath) {
-			$this->fscache->storeMiss($requestPath);
+            $this->fscache->storeMiss($requestPath);
         }
 
         return $path;
@@ -307,7 +307,7 @@ class Driver extends elFinderVolumeDriver {
     {
         $ret = false;
         if ($this->fs->hasDir()) {
-        	$ret = $this->fs->hasDir($path);
+            $ret = $this->fs->hasDir($path);
         } else {
             foreach ($this->fs->listContents($path) as $meta) {
                 if ($meta && $meta['type'] !== 'file') {
@@ -636,14 +636,14 @@ class Driver extends elFinderVolumeDriver {
         return;
     }
 
-	/**
-	 * chmod implementation
-	 *
-	 * @return bool
-	 **/
-	protected function _chmod($path, $mode) {
-		return false;
-	}
+    /**
+     * chmod implementation
+     *
+     * @return bool
+     **/
+    protected function _chmod($path, $mode) {
+        return false;
+    }
 
     /**
      * Resize image
@@ -653,10 +653,10 @@ class Driver extends elFinderVolumeDriver {
      * @param  int      $height  new height
      * @param  int      $x       X start poistion for crop
      * @param  int      $y       Y start poistion for crop
-	 * @param  string   $mode    action how to mainpulate image
-	 * @param  string   $bg      background color
-	 * @param  int      $degree  rotete degree
-	 * @param  int      $jpgQuality  JEPG quality (1-100)
+     * @param  string   $mode    action how to mainpulate image
+     * @param  string   $bg      background color
+     * @param  int      $degree  rotete degree
+     * @param  int      $jpgQuality  JEPG quality (1-100)
      * @return array|false
      * @author Dmitry (dio) Levashov
      * @author Alexey Sukhotin
@@ -710,9 +710,9 @@ class Driver extends elFinderVolumeDriver {
         }
 
         if ($jpgQuality && $image->mime() === 'image/jpeg') {
-        	$result = (string) $image->encode('jpg', $jpgQuality);
+            $result = (string) $image->encode('jpg', $jpgQuality);
         } else {
-        	$result = (string) $image->encode();
+            $result = (string) $image->encode();
         }
         if ($result && $this->_filePutContents($path, $result)) {
             $stat = $this->stat($path);
@@ -726,16 +726,16 @@ class Driver extends elFinderVolumeDriver {
     
     public function getImageSize($path, $mime = '')
     {
-		$size = false;
-		if ($mime === '' || strtolower(substr($mime, 0, 5)) === 'image') {
-			if ($data = $this->_getContents($path)) {
-				if ($size = @getimagesizefromstring($data)) {
-					$size['dimensions'] = $size[0].'x'.$size[1];
-				}
-			}
-		}
-		return $size;
-	}
+        $size = false;
+        if ($mime === '' || strtolower(substr($mime, 0, 5)) === 'image') {
+            if ($data = $this->_getContents($path)) {
+                if ($size = @getimagesizefromstring($data)) {
+                    $size['dimensions'] = $size[0].'x'.$size[1];
+                }
+            }
+        }
+        return $size;
+    }
 
     /**
      * Return content URL
