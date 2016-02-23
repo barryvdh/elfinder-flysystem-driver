@@ -176,7 +176,7 @@ class Driver extends elFinderVolumeDriver {
         $basename = basename($path);
         
         foreach ($this->fs->listContents($dir) as $meta) {
-            if ($meta['type'] !== 'file' && $meta['basename'] == $basename) {
+            if ($meta && $meta['type'] !== 'file' && $meta['basename'] == $basename) {
                 return true;
             }
         }
@@ -258,6 +258,11 @@ class Driver extends elFinderVolumeDriver {
 
         $meta = $this->fs->getMetadata($path);
 
+        // getMetadata() on failure
+        if (! $meta) {
+            return array();
+        }
+
         // Set item filename to `name` if exists
         if (isset($meta['filename'])) {
             $stat['name'] = $meta['filename'];
@@ -305,7 +310,7 @@ class Driver extends elFinderVolumeDriver {
         	$ret = $this->fs->hasDir($path);
         } else {
             foreach ($this->fs->listContents($path) as $meta) {
-                if ($meta['type'] !== 'file') {
+                if ($meta && $meta['type'] !== 'file') {
                     $ret = true;
                     break;
                 }
@@ -343,7 +348,9 @@ class Driver extends elFinderVolumeDriver {
     {
         $paths = array();
         foreach ($this->fs->listContents($path, false) as $object) {
-            $paths[] = $object['path'];
+            if ($object) {
+                $paths[] = $object['path'];
+            }
         }
         return $paths;
     }
