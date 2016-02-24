@@ -15,7 +15,12 @@ class HasDir extends AbstractPlugin
      * @var AdapterInterface
      */
     protected $adapter;
-    
+
+    /**
+     * @var CachedAdapterInstance
+     */
+    protected $cachedAdapter = null;
+
     /**
      * @var Adapter has method hasDir()
      */
@@ -35,6 +40,7 @@ class HasDir extends AbstractPlugin
 
             // For a cached adapter, get the underlying instance
             if ($this->adapter instanceof CachedAdapter) {
+                $this->cachedAdapter = $this->adapter;
                 $this->adapter = $this->adapter->getAdapter();
             }
 
@@ -82,7 +88,10 @@ class HasDir extends AbstractPlugin
      */
     protected function getFromMethod($path)
     {
-        $res = $this->filesystem->getMetadata($path);
+        $res = false;
+        if ($this->cachedAdapter) {
+            $res = $this->cachedAdapter->getMetadata($path);
+        }
         if (!$res || !isset($res['hasdir'])) {
             $res = $this->adapter->hasDir($path);
         }
