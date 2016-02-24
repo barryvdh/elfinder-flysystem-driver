@@ -66,6 +66,17 @@ class Driver extends elFinderVolumeDriver {
     }
 
     /**
+     * @inheritdoc
+     */
+    public function clearstatcache() {
+        patent::clearstatcache();
+        // clear chached adapter cache
+        if ($this->fscache) {
+            $this->fscache->flush();
+        }
+    }
+
+    /**
      * Find the icon based on the used Adapter
      *
      * @return string
