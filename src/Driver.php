@@ -426,17 +426,13 @@ class Driver extends elFinderVolumeDriver {
      * @param  string  $source     source file path
      * @param  string  $target  target directory path
      * @param  string  $name       new file name
-     * @return bool
+     * @return string|bool
      **/
     protected function _copy($source, $target, $name)
     {
-        $result = $this->fs->copy($source, $this->_joinPath($target, $name));
+        $path = $this->_joinPath($target, $name);
 
-        if ($result && $this->fscache) {
-            $this->fscache->flush();
-        }
-
-        return $result;
+        return $this->_resultPath($this->fs->copy($source, $path), $path);
     }
 
     /**
