@@ -69,7 +69,7 @@ class Driver extends elFinderVolumeDriver {
      * @inheritdoc
      */
     public function clearstatcache() {
-        patent::clearstatcache();
+        parent::clearstatcache();
         // clear chached adapter cache
         if ($this->fscache) {
             $this->fscache->flush();
