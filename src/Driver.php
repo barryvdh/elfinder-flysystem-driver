@@ -203,19 +203,23 @@ class Driver extends elFinderVolumeDriver {
      */
     protected function _resultPath($result, $requestPath)
     {
+        if ($result === false) {
+            return false;
+        }
         if (! is_array($result)) {
             if ($this->fscache) {
                 $this->fscache->flush();
             }
             $result = $this->fs->getMetaData($requestPath);
         }
-
-        $path = ($result && isset($result['path']))? $result['path'] : false;
-
-        if ($this->fscache && $path !== $requestPath) {
-            $this->fscache->storeMiss($requestPath);
+        if ($result && isset($result['path'])) {
+            $path = $result['path'];
+            if ($this->fscache && $path !== $requestPath) {
+                $this->fscache->storeMiss($requestPath);
+            }
+        } else {
+            $path = ($result === false)? false : $requestPath;
         }
-
         return $path;
     }
 
