@@ -260,21 +260,21 @@ class Driver extends elFinderVolumeDriver {
         }
 
         // If not exists, return empty
-        if ( !$this->fs->has($path)) {
-            
+        if ( ! $this->fs->has($path)) {
+
             // Check if the parent doesn't have this path
             if ($this->_dirExists($path)) {
                 return $stat;
             }
-            
+
             // Neither a file or directory exist, return empty
-            return array();            
+            return array();
         }
 
         $meta = $this->fs->getMetadata($path);
 
-        // getMetadata() on failure
-        if (! $meta) {
+        // return empty on failure
+        if ( ! $meta) {
             return array();
         }
 
@@ -286,17 +286,23 @@ class Driver extends elFinderVolumeDriver {
             }
         }
 
-        // Get timestamp/size
-        $stat['ts'] = isset($meta['timestamp']) ? $meta['timestamp'] : null;
-        $stat['size'] = isset($meta['size']) ? $meta['size'] : null;
-        
-        // Check if file, if so, check mimetype
+        // Get timestamp/size if available
+        if (isset($meta['timestamp'])) {
+            $stat['ts'] = $meta['timestamp'];
+        }
+        if (isset($meta['size'])) {
+            $stat['size'] = $meta['size'];
+        }
+
+        // Check if file, if so, check mimetype when available
         if ($meta['type'] == 'file') {
             $stat['mime'] = isset($meta['mimetype']) ? $meta['mimetype'] : null;
 
             $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
             if ($this->urlBuilder && in_array($stat['mime'], $imgMimes)) {
-                $stat['url'] = $this->urlBuilder->getUrl($path, ['ts' => $stat['ts']]);
+                $stat['url'] = $this->urlBuilder->getUrl($path, [
+                    'ts' => $stat['ts']
+                ]);
                 $stat['tmb'] = $this->urlBuilder->getUrl($path, [
                     'ts' => $stat['ts'],
                     'w' => $this->tmbSize,
@@ -306,7 +312,7 @@ class Driver extends elFinderVolumeDriver {
             }
         }
 
-        if (! isset($stat['url']) && $this->fs->getUrl()) {
+        if ( ! isset($stat['url']) && $this->fs->getUrl()) {
             $stat['url'] = 1;
         }
 
