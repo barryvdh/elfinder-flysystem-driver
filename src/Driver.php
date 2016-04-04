@@ -287,12 +287,12 @@ class Driver extends elFinderVolumeDriver {
         }
 
         // Get timestamp/size
-        $stat['ts'] = isset($meta['timestamp'])? $meta['timestamp'] : $this->fs->getTimestamp($path);
-        $stat['size'] = isset($meta['size'])? $meta['size'] : $this->fs->getSize($path);
+        $stat['ts'] = isset($meta['timestamp']) ? $meta['timestamp'] : null;
+        $stat['size'] = isset($meta['size']) ? $meta['size'] : null;
         
         // Check if file, if so, check mimetype
         if ($meta['type'] == 'file') {
-            $stat['mime'] = isset($meta['mimetype'])? $meta['mimetype'] : $this->fs->getMimetype($path);
+            $stat['mime'] = isset($meta['mimetype']) ? $meta['mimetype'] : Util::guessMimeType($path, null);
 
             $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
             if ($this->urlBuilder && in_array($stat['mime'], $imgMimes)) {
