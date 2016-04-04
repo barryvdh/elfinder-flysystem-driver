@@ -292,7 +292,7 @@ class Driver extends elFinderVolumeDriver {
         
         // Check if file, if so, check mimetype
         if ($meta['type'] == 'file') {
-            $stat['mime'] = isset($meta['mimetype']) ? $meta['mimetype'] : Util::guessMimeType($path, null);
+            $stat['mime'] = isset($meta['mimetype']) ? $meta['mimetype'] : null;
 
             $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
             if ($this->urlBuilder && in_array($stat['mime'], $imgMimes)) {
