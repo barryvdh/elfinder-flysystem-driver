@@ -50,6 +50,7 @@ class Driver extends elFinderVolumeDriver {
             'glideURL' => null,
             'glideKey' => null,
             'imageManager' => null,
+            'checkSubfolders' => false, // Disable for performance
         );
 
         $this->options = array_merge($this->options, $opts);
