@@ -125,6 +125,10 @@ class Driver extends elFinderVolumeDriver {
         $this->fs->addPlugin(new GetUrl());
         $this->fs->addPlugin(new HasDir());
 
+        if ($this->fs->hasDir()) {
+            $this->options['checkSubfolders'] = true;
+        }
+
         $this->options['icon'] = $this->options['icon'] ?: $this->getIcon();
         $this->root = $this->options['path'];
 
