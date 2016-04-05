@@ -12,7 +12,6 @@ use League\Flysystem\FilesystemInterface;
 use League\Flysystem\Cached\Storage\Memory as MemoryStore;
 use League\Glide\Urls\UrlBuilderFactory;
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
-use Barryvdh\elFinderFlysystemDriver\Plugin\HasDir;
 use Barryvdh\elFinderFlysystemDriver\Cache\SessionStore;
 
 /**
@@ -73,19 +72,6 @@ class Driver extends elFinderVolumeDriver
         return parent::mount($opts);
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function clearstatcache()
-    {
-        parent::clearstatcache();
-
-        // clear cached adapter cache
-        if ($this->fscache) {
-            $this->fscache->flush();
-        }
-    }
-
     protected function clearcache()
     {
         parent::clearcache();
@@ -121,7 +107,7 @@ class Driver extends elFinderVolumeDriver
             $icon = 'volume_icon_local.png';
         }
 
-        $parentUrl = defined('ELFINDER_IMG_PARENT_URL')? (rtrim(ELFINDER_IMG_PARENT_URL, '/').'/') : '';
+        $parentUrl = defined('ELFINDER_IMG_PARENT_URL') ? (rtrim(ELFINDER_IMG_PARENT_URL, '/') . '/') : '';
         return $parentUrl . 'img/' . $icon;
     }
 
@@ -150,9 +136,9 @@ class Driver extends elFinderVolumeDriver
                     $this->fscache = $this->options['fscache'];
                 }
             } elseif ($this->options['cache']) {
-                switch($this->options['cache']) {
+                switch ($this->options['cache']) {
                     case 'session':
-                        $this->fscache = new SessionStore($this->session, 'fls_cache_'. $this->id);
+                        $this->fscache = new SessionStore($this->session, 'fls_cache_' . $this->id);
                         break;
                     case 'memory':
                         $this->fscache = new MemoryStore();
@@ -167,11 +153,6 @@ class Driver extends elFinderVolumeDriver
         }
 
         $this->fs->addPlugin(new GetUrl());
-        $this->fs->addPlugin(new HasDir());
-
-        if ($this->fs->hasDir()) {
-            $this->options['checkSubfolders'] = true;
-        }
 
         $this->options['icon'] = $this->options['icon'] ?: $this->getIcon();
         $this->root = $this->options['path'];
@@ -206,7 +187,7 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return parent directory path
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return string
      **/
     protected function _dirname($path)
@@ -217,7 +198,7 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return normalized path
      *
-     * @param  string  $path  path
+     * @param  string $path path
      * @return string
      **/
     protected function _normpath($path)
@@ -228,7 +209,7 @@ class Driver extends elFinderVolumeDriver
     /**
      * Check if the directory exists in the parent directory. Needed because not all drives handle directories correctly.
      *
-     * @param  string  $path  path
+     * @param  string $path path
      * @return boolean
      **/
     protected function _dirExists($path)
@@ -246,36 +227,6 @@ class Driver extends elFinderVolumeDriver
     }
 
     /**
-     * Get item path from FS method result, It supports item ID based file system
-     *
-     * @param boolean|array $result
-     * @param string $requestPath
-     *
-     * @return string|false
-     */
-    protected function _resultPath($result, $requestPath)
-    {
-        if ($result === false) {
-            return false;
-        }
-        if (! is_array($result)) {
-            if ($this->fscache) {
-                $this->fscache->flush();
-            }
-            $result = $this->fs->getMetaData($requestPath);
-        }
-        if ($result && isset($result['path'])) {
-            $path = $result['path'];
-            if ($this->fscache && $path !== $requestPath) {
-                $this->fscache->storeMiss($requestPath);
-            }
-        } else {
-            $path = ($result === false)? false : $requestPath;
-        }
-        return $path;
-    }
-
-    /**
      * Return stat for given path.
      * Stat contains following fields:
      * - (int)    size    file size in b. required
@@ -290,7 +241,7 @@ class Driver extends elFinderVolumeDriver
      *
      * If file does not exists - returns empty array or false.
      *
-     * @param  string  $path    file path
+     * @param  string $path file path
      * @return array|false
      **/
     protected function _stat($path)
@@ -312,7 +263,7 @@ class Driver extends elFinderVolumeDriver
         }
 
         // If not exists, return empty
-        if ( ! $this->fs->has($path)) {
+        if (!$this->fs->has($path)) {
 
             // Check if the parent doesn't have this path
             if ($this->_dirExists($path)) {
@@ -323,10 +274,14 @@ class Driver extends elFinderVolumeDriver
             return array();
         }
 
-        $meta = $this->fs->getMetadata($path);
+        try {
+            $meta = $this->fs->getMetadata($path);
+        } catch (\Exception $e) {
+            return array();
+        }
 
         // return empty on failure
-        if ( ! $meta) {
+        if (!$meta) {
             return array();
         }
 
@@ -364,7 +319,7 @@ class Driver extends elFinderVolumeDriver
             }
         }
 
-        if ( ! isset($stat['url']) && $this->fs->getUrl()) {
+        if (!isset($stat['url']) && $this->fs->getUrl()) {
             $stat['url'] = 1;
         }
 
@@ -376,31 +331,26 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return true if path is dir and has at least one childs directory
      *
-     * @param  string  $path  dir path
+     * @param  string $path dir path
      * @return bool
      **/
     protected function _subdirs($path)
     {
-        $ret = false;
-        if ($this->fs->hasDir()) {
-            $ret = $this->fs->hasDir($path);
-        } else {
-            foreach ($this->fs->listContents($path) as $meta) {
-                if ($meta && $meta['type'] !== 'file') {
-                    $ret = true;
-                    break;
-                }
-            }
-        }
-        return $ret;
+        $contents = $this->fs->listContents($path);
+
+        $filter = function ($item) {
+            return $item['type'] == 'dir';
+        };
+        
+        return !empty(array_filter($contents, $filter));
     }
 
     /**
      * Return object width and height
      * Usually used for images, but can be realize for video etc...
      *
-     * @param  string  $path  file path
-     * @param  string  $mime  file mime type
+     * @param  string $path file path
+     * @param  string $mime file mime type
      * @return string
      **/
     protected function _dimensions($path, $mime)
@@ -417,7 +367,7 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return files list in directory
      *
-     * @param  string  $path  dir path
+     * @param  string $path dir path
      * @return array
      **/
     protected function _scandir($path)
@@ -434,11 +384,11 @@ class Driver extends elFinderVolumeDriver
     /**
      * Open file and return file pointer
      *
-     * @param  string  $path  file path
-     * @param  string  $mode
+     * @param  string $path file path
+     * @param  string $mode
      * @return resource|false
      **/
-    protected function _fopen($path, $mode="rb")
+    protected function _fopen($path, $mode = "rb")
     {
         return $this->fs->readStream($path);
     }
@@ -446,11 +396,11 @@ class Driver extends elFinderVolumeDriver
     /**
      * Close opened file
      *
-     * @param  resource  $fp    file pointer
-     * @param  string    $path  file path
+     * @param  resource $fp file pointer
+     * @param  string $path file path
      * @return bool
      **/
-    protected function _fclose($fp, $path='')
+    protected function _fclose($fp, $path = '')
     {
         return @fclose($fp);
     }
@@ -460,66 +410,82 @@ class Driver extends elFinderVolumeDriver
     /**
      * Create dir and return created dir path or false on failed
      *
-     * @param  string  $path  parent dir path
-     * @param  string  $name  new directory name
+     * @param  string $path parent dir path
+     * @param  string $name new directory name
      * @return string|bool
      **/
     protected function _mkdir($path, $name)
     {
         $path = $this->_joinPath($path, $name);
 
-        return $this->_resultPath($this->fs->createDir($path), $path);
+        if ($this->fs->createDir($path) === false) {
+            return false;
+        }
+
+        return $path;
     }
 
     /**
      * Create file and return it's path or false on failed
      *
-     * @param  string  $path  parent dir path
-     * @param string  $name  new file name
+     * @param  string $path parent dir path
+     * @param string $name new file name
      * @return string|bool
      **/
     protected function _mkfile($path, $name)
     {
         $path = $this->_joinPath($path, $name);
 
-        return $this->_resultPath($this->fs->write($path, ''), $path);
+        if ($this->fs->write($path, '') === false) {
+            return false;
+        }
+
+        return $path;
     }
 
     /**
      * Copy file into another file
      *
-     * @param  string  $source     source file path
-     * @param  string  $target  target directory path
-     * @param  string  $name       new file name
+     * @param  string $source source file path
+     * @param  string $target target directory path
+     * @param  string $name new file name
      * @return string|bool
      **/
     protected function _copy($source, $target, $name)
     {
         $path = $this->_joinPath($target, $name);
 
-        return $this->_resultPath($this->fs->copy($source, $path), $path);
+        if ($this->fs->copy($source, $path) === false) {
+            return false;
+        }
+
+        return $path;
     }
 
     /**
      * Move file into another parent dir.
      * Return new file path or false.
      *
-     * @param  string  $source  source file path
-     * @param  string  $target  target dir path
-     * @param  string  $name    file name
+     * @param  string $source source file path
+     * @param  string $target target dir path
+     * @param  string $name file name
      * @return string|bool
      **/
     protected function _move($source, $target, $name)
     {
         $path = $this->_joinPath($target, $name);
 
-        return $this->_resultPath($this->fs->rename($source, $path), $path);
+        if ($this->fs->rename($source, $path) === false) {
+            return false;
+        }
+
+        return $path;
     }
 
     /**
      * Remove file
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return bool
      **/
     protected function _unlink($path)
@@ -530,7 +496,7 @@ class Driver extends elFinderVolumeDriver
     /**
      * Remove dir
      *
-     * @param  string  $path  dir path
+     * @param  string $path dir path
      * @return bool
      **/
     protected function _rmdir($path)
@@ -542,29 +508,33 @@ class Driver extends elFinderVolumeDriver
      * Create new file and write into it from file pointer.
      * Return new file path or false on error.
      *
-     * @param  resource  $fp   file pointer
-     * @param  string    $dir  target dir path
-     * @param  string    $name file name
-     * @param  array     $stat file stat (required by some virtual fs)
+     * @param  resource $fp file pointer
+     * @param  string $dir target dir path
+     * @param  string $name file name
+     * @param  array $stat file stat (required by some virtual fs)
      * @return bool|string
      **/
     protected function _save($fp, $dir, $name, $stat)
     {
         $path = $this->_joinPath($dir, $name);
-        $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         $config = [];
         if (isset(self::$mimetypes[$ext])) {
             $config['mimetype'] = self::$mimetypes[$ext];
         }
 
-        return $this->_resultPath($this->fs->putStream($path, $fp, $config), $path);
+        if ($this->fs->putStream($path, $fp, $config) === false) {
+            return false;
+        }
+
+        return $path;
     }
 
     /**
      * Get file contents
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return string|false
      **/
     protected function _getContents($path)
@@ -575,8 +545,8 @@ class Driver extends elFinderVolumeDriver
     /**
      * Write a string to a file
      *
-     * @param  string  $path     file path
-     * @param  string  $content  new file content
+     * @param  string $path file path
+     * @param  string $content new file content
      * @return bool
      **/
     protected function _filePutContents($path, $content)
@@ -590,11 +560,12 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return file name
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return string
      * @author Dmitry (dio) Levashov
      **/
-    protected function _basename($path) {
+    protected function _basename($path)
+    {
 
         return basename($path);
     }
@@ -602,20 +573,20 @@ class Driver extends elFinderVolumeDriver
     /**
      * Join dir name and file name and return full path
      *
-     * @param  string  $dir
-     * @param  string  $name
+     * @param  string $dir
+     * @param  string $name
      * @return string
      * @author Dmitry (dio) Levashov
      **/
     protected function _joinPath($dir, $name)
     {
-        return Util::normalizePath($dir.$this->separator.$name);
+        return Util::normalizePath($dir . $this->separator . $name);
     }
 
     /**
      * Return file path related to root dir
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return string
      **/
     protected function _relpath($path)
@@ -626,7 +597,7 @@ class Driver extends elFinderVolumeDriver
     /**
      * Convert path related to root dir into real path
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return string
      **/
     protected function _abspath($path)
@@ -637,44 +608,45 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return fake path started from root dir
      *
-     * @param  string  $path  file path
+     * @param  string $path file path
      * @return string
      **/
     protected function _path($path)
     {
-        return $this->rootName.$this->separator.$path;
+        return $this->rootName . $this->separator . $path;
     }
 
     /**
      * Return true if $path is children of $parent
      *
-     * @param  string  $path    path to check
-     * @param  string  $parent  parent path
+     * @param  string $path path to check
+     * @param  string $parent parent path
      * @return bool
      * @author Dmitry (dio) Levashov
      **/
     protected function _inpath($path, $parent)
     {
-        return $path == $parent || strpos($path, $parent.'/') === 0;
+        return $path == $parent || strpos($path, $parent . '/') === 0;
     }
 
     /**
      * Create symlink
      *
-     * @param  string  $source     file to link to
-     * @param  string  $targetDir  folder to create link in
-     * @param  string  $name       symlink name
+     * @param  string $source file to link to
+     * @param  string $targetDir folder to create link in
+     * @param  string $name symlink name
      * @return bool
      **/
-    protected function _symlink($source, $targetDir, $name) {
+    protected function _symlink($source, $targetDir, $name)
+    {
         return false;
     }
 
     /**
      * Extract files from archive
      *
-     * @param  string  $path file path
-     * @param  array   $arc  archiver options
+     * @param  string $path file path
+     * @param  array $arc archiver options
      * @return bool
      **/
     protected function _extract($path, $arc)
@@ -685,10 +657,10 @@ class Driver extends elFinderVolumeDriver
     /**
      * Create archive and return its path
      *
-     * @param  string  $dir    target dir
-     * @param  array   $files  files names list
-     * @param  string  $name   archive name
-     * @param  array   $arc    archiver options
+     * @param  string $dir target dir
+     * @param  array $files files names list
+     * @param  string $name archive name
+     * @param  array $arc archiver options
      * @return string|bool
      **/
     protected function _archive($dir, $files, $name, $arc)
@@ -711,29 +683,31 @@ class Driver extends elFinderVolumeDriver
      *
      * @return bool
      **/
-    protected function _chmod($path, $mode) {
+    protected function _chmod($path, $mode)
+    {
         return false;
     }
 
     /**
      * Resize image
      *
-     * @param  string   $hash    image file
-     * @param  int      $width   new width
-     * @param  int      $height  new height
-     * @param  int      $x       X start poistion for crop
-     * @param  int      $y       Y start poistion for crop
-     * @param  string   $mode    action how to mainpulate image
-     * @param  string   $bg      background color
-     * @param  int      $degree  rotete degree
-     * @param  int      $jpgQuality  JEPG quality (1-100)
+     * @param  string $hash image file
+     * @param  int $width new width
+     * @param  int $height new height
+     * @param  int $x X start poistion for crop
+     * @param  int $y Y start poistion for crop
+     * @param  string $mode action how to mainpulate image
+     * @param  string $bg background color
+     * @param  int $degree rotete degree
+     * @param  int $jpgQuality JEPG quality (1-100)
      * @return array|false
      * @author Dmitry (dio) Levashov
      * @author Alexey Sukhotin
      * @author nao-pon
      * @author Troex Nevelin
      **/
-    public function resize($hash, $width, $height, $x, $y, $mode = 'resize', $bg = '', $degree = 0, $jpgQuality = null) {
+    public function resize($hash, $width, $height, $x, $y, $mode = 'resize', $bg = '', $degree = 0, $jpgQuality = null)
+    {
         if ($this->commandDisabled('resize')) {
             return $this->setError(elFinder::ERROR_PERM_DENIED);
         }
@@ -755,9 +729,9 @@ class Driver extends elFinderVolumeDriver
             return false;
         }
 
-        switch($mode) {
+        switch ($mode) {
             case 'propresize':
-                $image->resize($width, $height, function($constraint){
+                $image->resize($width, $height, function ($constraint) {
                     $constraint->aspectRatio();
                 });
                 break;
@@ -780,9 +754,9 @@ class Driver extends elFinderVolumeDriver
         }
 
         if ($jpgQuality && $image->mime() === 'image/jpeg') {
-            $result = (string) $image->encode('jpg', $jpgQuality);
+            $result = (string)$image->encode('jpg', $jpgQuality);
         } else {
-            $result = (string) $image->encode();
+            $result = (string)$image->encode();
         }
         if ($result && $this->_filePutContents($path, $result)) {
             $stat = $this->stat($path);
@@ -800,7 +774,7 @@ class Driver extends elFinderVolumeDriver
         if ($mime === '' || strtolower(substr($mime, 0, 5)) === 'image') {
             if ($data = $this->_getContents($path)) {
                 if ($size = @getimagesizefromstring($data)) {
-                    $size['dimensions'] = $size[0].'x'.$size[1];
+                    $size['dimensions'] = $size[0] . 'x' . $size[1];
                 }
             }
         }
@@ -810,13 +784,13 @@ class Driver extends elFinderVolumeDriver
     /**
      * Return content URL
      *
-     * @param string  $hash    file hash
-     * @param array   $options options
+     * @param string $hash file hash
+     * @param array $options options
      * @return string
      **/
     public function getContentUrl($hash, $options = array())
     {
-        if (($file = $this->file($hash)) == false || !$file['url'] || $file['url'] == 1) {
+        if (($file = $this->file($hash)) == false || !isset($file['url']) || !$file['url'] || $file['url'] == 1) {
             $path = $this->decode($hash);
             return $this->fs->getUrl($path);
         }
