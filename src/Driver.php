@@ -13,14 +13,15 @@ use League\Flysystem\Cached\Storage\Memory as MemoryStore;
 use League\Glide\Urls\UrlBuilderFactory;
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
 use Barryvdh\elFinderFlysystemDriver\Plugin\HasDir;
+use Barryvdh\elFinderFlysystemDriver\Cache\SessionStore;
 
 /**
  * elFinder driver for Flysytem (https://github.com/thephpleague/flysystem)
  *
  * @author Barry vd. Heuvel
  * */
-class Driver extends elFinderVolumeDriver {
-
+class Driver extends elFinderVolumeDriver
+{
     /**
      * Driver id
      * Must be started from letter and contains [a-z0-9]
@@ -151,12 +152,16 @@ class Driver extends elFinderVolumeDriver {
             } elseif ($this->options['cache']) {
                 switch($this->options['cache']) {
                     case 'session':
-                        //TODO;
+                        $this->fscache = new SessionStore($this->session, 'fls_cache_'. $this->id);
+                        break;
                     case 'memory':
                         $this->fscache = new MemoryStore();
-                        $adapter = new CachedAdapter($adapter, $this->fscache);
-                        $this->fs = new Filesystem($adapter);
                         break;
+                }
+
+                if ($this->fscache) {
+                    $adapter = new CachedAdapter($adapter, $this->fscache);
+                    $this->fs = new Filesystem($adapter);
                 }
             }
         }
