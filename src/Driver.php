@@ -4,8 +4,12 @@ namespace Barryvdh\elFinderFlysystemDriver;
 
 use elFinderVolumeDriver;
 use Intervention\Image\ImageManager;
+use League\Flysystem\Cached\CachedAdapter;
+use League\Flysystem\Cached\CacheInterface;
+use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
+use League\Flysystem\Cached\Storage\Memory as MemoryStore;
 use League\Glide\Urls\UrlBuilderFactory;
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
 use Barryvdh\elFinderFlysystemDriver\Plugin\HasDir;
@@ -29,10 +33,10 @@ class Driver extends elFinderVolumeDriver {
     /** @var FilesystemInterface $fs */
     protected $fs;
 
-    /** @var FilesystemCachedCacheInterface $fscache */
-    protected $fscache = null;
+    /** @var CacheInterface $fs */
+    protected $fscache;
 
-    /** @var \League\Glide\Http\UrlBuilder $urlBuilder */
+    /** @var UrlBuilderFactory $urlBuilder */
     protected $urlBuilder = null;
 
     /** @var ImageManager $imageManager */
@@ -50,6 +54,8 @@ class Driver extends elFinderVolumeDriver {
             'glideURL' => null,
             'glideKey' => null,
             'imageManager' => null,
+            'cache' => 'session',   // 'session', 'memory' or false
+            'fscache' => null,      // The Flysystem cache
             'checkSubfolders' => false, // Disable for performance
         );
 
@@ -69,9 +75,21 @@ class Driver extends elFinderVolumeDriver {
     /**
      * @inheritdoc
      */
-    public function clearstatcache() {
+    public function clearstatcache()
+    {
         parent::clearstatcache();
-        // clear chached adapter cache
+
+        // clear cached adapter cache
+        if ($this->fscache) {
+            $this->fscache->flush();
+        }
+    }
+
+    protected function clearcache()
+    {
+        parent::clearcache();
+
+        // clear cached adapter cache
         if ($this->fscache) {
             $this->fscache->flush();
         }
@@ -88,6 +106,10 @@ class Driver extends elFinderVolumeDriver {
             $adapter = $this->fs->getAdapter();
         } catch (\Exception $e) {
             $adapter = null;
+        }
+
+        if ($adapter instanceof CachedAdapter) {
+            $adapter = $adapter->getAdapter();
         }
 
         if ($adapter instanceof League\Flysystem\Adapter\AbstractFtpAdapter) {
@@ -115,10 +137,27 @@ class Driver extends elFinderVolumeDriver {
             return $this->setError('A filesystem instance is required');
         }
 
-        // flysystem cache object instance (cached adapter dose not have method like a `getCache()`.
-        if (isset($this->options['fscache']) && interface_exists('\League\Flysystem\Cached\CacheInterface', false)) {
-            if ($this->options['fscache'] instanceof \League\Flysystem\Cached\CacheInterface) {
-                $this->fscache = $this->options['fscache'];
+        if ($this->fs instanceof Filesystem) {
+            $adapter = $this->fs->getAdapter();
+
+            // If the Flysystem adapter already is a cache, try to determine the cache.
+            if ($adapter instanceof CachedAdapter) {
+                // Try to get the cache (method doesn't exist in all versions)
+                if (method_exists($adapter, 'getCache')) {
+                    $this->fscache = $adapter->getCache();
+                } elseif ($this->options['fscache'] instanceof CacheInterface) {
+                    $this->fscache = $this->options['fscache'];
+                }
+            } elseif ($this->options['cache']) {
+                switch($this->options['cache']) {
+                    case 'session':
+                        //TODO;
+                    case 'memory':
+                        $this->fscache = new MemoryStore();
+                        $adapter = new CachedAdapter($adapter, $this->fscache);
+                        $this->fs = new Filesystem($adapter);
+                        break;
+                }
             }
         }
 
@@ -146,13 +185,14 @@ class Driver extends elFinderVolumeDriver {
     }
 
     /**
-     * Configure after successfull mount.
+     * Configure after successful mount.
      *
      * @return void
      **/
     protected function configure()
     {
         parent::configure();
+
         if ($this->fscache && $this->isMyReload()) {
             $this->fscache->flush();
         }
@@ -190,7 +230,7 @@ class Driver extends elFinderVolumeDriver {
     {
         $dir = $this->_dirname($path);
         $basename = basename($path);
-        
+
         foreach ($this->fs->listContents($dir) as $meta) {
             if ($meta && $meta['type'] !== 'file' && $meta['basename'] == $basename) {
                 return true;
@@ -202,9 +242,11 @@ class Driver extends elFinderVolumeDriver {
 
     /**
      * Get item path from FS method result, It supports item ID based file system
-     * 
+     *
      * @param boolean|array $result
      * @param string $requestPath
+     *
+     * @return string|false
      */
     protected function _resultPath($result, $requestPath)
     {
@@ -512,8 +554,6 @@ class Driver extends elFinderVolumeDriver {
         }
 
         return $this->_resultPath($this->fs->putStream($path, $fp, $config), $path);
-
-        return false;
     }
 
     /**
@@ -748,7 +788,7 @@ class Driver extends elFinderVolumeDriver {
 
         return false;
     }
-    
+
     public function getImageSize($path, $mime = '')
     {
         $size = false;
