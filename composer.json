@@ -11,9 +11,10 @@
     ],
     "require": {
         "php": ">=5.4",
-        "studio-42/elfinder": "2.1.x",
-        "league/flysystem": "~1.0",
-        "intervention/image": "~2.0"
+        "studio-42/elfinder": "^2.1.10",
+        "league/flysystem": "^1.0",
+        "league/flysystem-cached-adapter": "^1.0",
+        "intervention/image": "^2.0"
     },
     "suggest": {
         "league/glide": "1.x to display images through Glide"
@@ -26,7 +27,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.1-dev"
+            "dev-master": "0.2-dev"
         }
     }
 }
