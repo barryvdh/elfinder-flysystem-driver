@@ -138,6 +138,9 @@ class Driver extends elFinderVolumeDriver
             return $this->setError('A filesystem instance is required');
         }
 
+        $this->fs->addPlugin(new HasDir());
+        $hasDir = $this->fs->hasDir();
+
         if ($this->fs instanceof Filesystem) {
             $adapter = $this->fs->getAdapter();
 
@@ -152,7 +155,11 @@ class Driver extends elFinderVolumeDriver
             } elseif ($this->options['cache']) {
                 switch($this->options['cache']) {
                     case 'session':
-                        $this->fscache = new SessionStore($this->session, 'fls_cache_'. $this->id);
+                        $options = [
+                            'hasDir' => $hasDir,
+                            'disableEnsureParentDirectories' => ! empty($this->options['cacheDisableEnsureParentDirectories'])
+                        ];
+                        $this->fscache = new SessionStore($this->session, 'fls_cache_'. $this->id, $options);
                         break;
                     case 'memory':
                         $this->fscache = new MemoryStore();
@@ -162,14 +169,14 @@ class Driver extends elFinderVolumeDriver
                 if ($this->fscache) {
                     $adapter = new CachedAdapter($adapter, $this->fscache);
                     $this->fs = new Filesystem($adapter);
+                    $this->fs->addPlugin(new HasDir());
                 }
             }
         }
 
         $this->fs->addPlugin(new GetUrl());
-        $this->fs->addPlugin(new HasDir());
 
-        if ($this->fs->hasDir()) {
+        if ($hasDir) {
             $this->options['checkSubfolders'] = true;
         }
 
