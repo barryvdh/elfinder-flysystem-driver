@@ -342,7 +342,8 @@ class Driver extends elFinderVolumeDriver
             return $item['type'] == 'dir';
         };
         
-        return !empty(array_filter($contents, $filter));
+        $dirs = array_filter($contents, $filter);
+        return !empty($dirs);
     }
 
     /**
