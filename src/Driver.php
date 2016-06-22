@@ -280,9 +280,8 @@ class Driver extends elFinderVolumeDriver
             return array();
         }
 
-        // return empty on failure
-        if (!$meta) {
-            return array();
+        if(false === $meta) {
+            return $stat;
         }
 
         // Set item filename.extension to `name` if exists
