@@ -154,7 +154,7 @@ class Driver extends elFinderVolumeDriver
 
         $this->fs->addPlugin(new GetUrl());
 
-        $this->options['icon'] = $this->options['icon'] ?: $this->getIcon();
+        $this->options['icon'] = $this->options['icon'] ?: (empty($this->options['rootCssClass'])? $this->getIcon() : '');
         $this->root = $this->options['path'];
 
         if ($this->options['glideURL']) {
