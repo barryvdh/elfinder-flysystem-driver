@@ -763,6 +763,8 @@ class Driver extends elFinderVolumeDriver
             $result = (string)$image->encode();
         }
         if ($result && $this->_filePutContents($path, $result)) {
+            $this->rmTmb($file);
+            $this->clearstatcache();
             $stat = $this->stat($path);
             $stat['width'] = $image->width();
             $stat['height'] = $image->height();
