@@ -13,31 +13,33 @@ See https://github.com/thephpleague/flysystem for more information.
 
 You can use the driver by setting the connector config to Flysystem.
 
-    'roots' => [
-        [
-            'driver' => 'Flysystem', 
-            'path' => 'images',
-            'URL' => '/images', 
-            'filesystem' => new Filesystem(new LocalAdapter('/path/to/public_html'))
-        ],
-        [
-            'driver' => 'Flysystem',
-            'URL' => 'http://mydomain.com/content',
-            'alias' => 'Mydomain.com',
-            'filesystem' => new Filesystem(new FtpAdapter(
-                    [
-                        'host' => 'mydomain.com',
-                        'username' => 'user',
-                        'password' => '****',
-                        'root' => '/domains/mydomain.com/public_html/content',
-                    ]
-                )),
-        ],
-        [
-            'driver' => 'Flysystem',
-            'adapter' => new DropboxAdapter(new Dropbox\Client($token, $appName))
-        ],
-    ];
+```php
+'roots' => [
+    [
+        'driver' => 'Flysystem', 
+        'path' => 'images',
+        'URL' => '/images', 
+        'filesystem' => new Filesystem(new LocalAdapter('/path/to/public_html'))
+    ],
+    [
+        'driver' => 'Flysystem',
+        'URL' => 'http://mydomain.com/content',
+        'alias' => 'Mydomain.com',
+        'filesystem' => new Filesystem(new FtpAdapter(
+                [
+                    'host' => 'mydomain.com',
+                    'username' => 'user',
+                    'password' => '****',
+                    'root' => '/domains/mydomain.com/public_html/content',
+                ]
+            )),
+    ],
+    [
+        'driver' => 'Flysystem',
+        'adapter' => new DropboxAdapter(new Dropbox\Client($token, $appName))
+    ],
+];
+```
 
 The `path` and `URL` options are optional. The path defaults to '/', the URL is only possible when the file is visible through an URL.
 
@@ -45,12 +47,14 @@ The `path` and `URL` options are optional. The path defaults to '/', the URL is 
 
 If you require [Glide](https://github.com/thephpleague/glide), you can show thumbnails for your images and generate secure urls.
 
-    [
-        'driver' => 'Flysystem', 
-        'filesystem' => $fs,
-        'glideURL' => 'http://domain.com/glideserver',
-        'glideKey' => 'your-sign-key',
-    ],
+```php
+[
+    'driver' => 'Flysystem', 
+    'filesystem' => $fs,
+    'glideURL' => 'http://domain.com/glideserver',
+    'glideKey' => 'your-sign-key',
+],
+```
 
 You can still use the tmbSize and tmbCrop options from the [configuration options](https://github.com/Studio-42/elFinder/wiki/Connector-configuration-options-2.1#root-options)
 
