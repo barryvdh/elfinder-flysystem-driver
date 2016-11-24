@@ -19,7 +19,7 @@ You can use the driver by setting the connector config to Flysystem.
             'path' => 'images',
             'URL' => '/images', 
             'filesystem' => new Filesystem(new LocalAdapter('/path/to/public_html')),
-            'cache' => 'session' // 'session' or 'memory'. Defaults to 'session'. This option is also available for other adapters.
+            'cache' => 'session', // 'session', 'memory' or false
         ],
         [
             'driver' => 'Flysystem',
