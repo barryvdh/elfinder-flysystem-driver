@@ -36,7 +36,7 @@ class Driver extends elFinderVolumeDriver
     /** @var CacheInterface $fs */
     protected $fscache;
 
-    /** @var UrlBuilderFactory $urlBuilder */
+    /** @var UrlBuilder $urlBuilder */
     protected $urlBuilder = null;
 
     /** @var ImageManager $imageManager */
@@ -344,7 +344,7 @@ class Driver extends elFinderVolumeDriver
         $filter = function ($item) {
             return $item['type'] == 'dir';
         };
-        
+
         $dirs = array_filter($contents, $filter);
         return !empty($dirs);
     }
