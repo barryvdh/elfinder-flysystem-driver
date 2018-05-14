@@ -167,6 +167,9 @@ class Driver extends elFinderVolumeDriver
             $this->imageManager = new ImageManager();
         }
 
+        // enable command archive
+        $this->options['useRemoteArchive'] = true;
+
         return true;
     }
 
