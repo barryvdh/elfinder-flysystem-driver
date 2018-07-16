@@ -800,8 +800,15 @@ class Driver extends elFinderVolumeDriver
     public function getContentUrl($hash, $options = array())
     {
         if (($file = $this->file($hash)) == false || !isset($file['url']) || !$file['url'] || $file['url'] == 1) {
+            if ($file && !empty($file['url']) && !empty($options['temporary'])) {
+                return parent::getContentUrl($hash, $options);
+            }
             $path = $this->decode($hash);
-            return $this->fs->getUrl($path);
+            if ($res = $this->fs->getUrl($path) || empty($options['temporary'])) {
+                return $res;
+            } else {
+                return parent::getContentUrl($hash, $options);
+            }
         }
         return $file['url'];
     }
