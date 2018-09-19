@@ -531,6 +531,10 @@ class Driver extends elFinderVolumeDriver
             $config['mimetype'] = self::$mimetypes[$ext];
         }
 
+        if (isset($this->options['visibility'])) {
+            $config['visibility'] = $this->options['visibility'];
+        }
+
         if ($this->fs->putStream($path, $fp, $config) === false) {
             return false;
         }
