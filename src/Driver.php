@@ -799,12 +799,23 @@ class Driver extends elFinderVolumeDriver
      **/
     public function getContentUrl($hash, $options = array())
     {
+        if (! empty($options['onetime']) && $this->options['onetimeUrl']) {
+            // use parent method to make onetime URL
+            return parent::getContentUrl($hash, $options);
+        }
+        if (!empty($options['temporary'])) {
+            // try make temporary file
+            $url = parent::getContentUrl($hash, $options);
+            if ($url) {
+                return $url;
+            }
+        }
         if (($file = $this->file($hash)) == false || !isset($file['url']) || !$file['url'] || $file['url'] == 1) {
             if ($file && !empty($file['url']) && !empty($options['temporary'])) {
                 return parent::getContentUrl($hash, $options);
             }
             $path = $this->decode($hash);
-            if ($res = $this->fs->getUrl($path) || empty($options['temporary'])) {
+            if (($res = $this->fs->getUrl($path)) || empty($options['temporary'])) {
                 return $res;
             } else {
                 return parent::getContentUrl($hash, $options);
