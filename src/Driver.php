@@ -815,7 +815,7 @@ class Driver extends elFinderVolumeDriver
                 return parent::getContentUrl($hash, $options);
             }
             $path = $this->decode($hash);
-            if ($res = $this->fs->getUrl($path) || empty($options['temporary'])) {
+            if (($res = $this->fs->getUrl($path)) || empty($options['temporary'])) {
                 return $res;
             } else {
                 return parent::getContentUrl($hash, $options);
