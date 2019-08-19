@@ -147,7 +147,7 @@ class Driver extends elFinderVolumeDriver
 
                 if ($this->fscache) {
                     $adapter = new CachedAdapter($adapter, $this->fscache);
-                    $this->fs = new Filesystem($adapter);
+                    $this->fs = new Filesystem($adapter, $this->fs->getConfig());
                 }
             }
         }
