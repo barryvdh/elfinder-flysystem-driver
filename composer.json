@@ -19,7 +19,7 @@
         "phpunit/phpunit": "^9",
         "squizlabs/php_codesniffer": "^3.5",
         "phpstan/phpstan": "^1.4",
-        "league/flysystem-memory": "^3"
+        "league/flysystem-memory": "^2|^3"
     },
     "suggest": {
         "league/glide": "1.x to display images through Glide"
