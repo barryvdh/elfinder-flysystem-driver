@@ -10,11 +10,17 @@
         }
     ],
     "require": {
-        "php": ">=5.4",
+        "php": "^7.4|^8.0",
         "studio-42/elfinder": "^2.1.10",
         "league/flysystem": "^1.0",
         "league/flysystem-cached-adapter": "^1.0",
         "intervention/image": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9",
+        "squizlabs/php_codesniffer": "^3.5",
+        "phpstan/phpstan": "^1.4",
+        "league/flysystem-memory": "^1"
     },
     "suggest": {
         "league/glide": "1.x to display images through Glide"
@@ -24,6 +30,18 @@
          "psr-4": {
             "Barryvdh\\elFinderFlysystemDriver\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Barryvdh\\elFinderFlysystemDriver\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "actions": "composer test && composer analyse && composer check-style",
+        "test": "phpunit",
+        "analyse": "phpstan analyse src tests --level=9",
+        "check-style": "phpcs -p --standard=PSR12 --exclude=Generic.Files.LineLength --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests",
+        "fix-style": "phpcbf -p --standard=PSR12 --exclude=Generic.Files.LineLength --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests"
     },
     "extra": {
         "branch-alias": {

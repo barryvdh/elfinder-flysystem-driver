@@ -1,0 +1,44 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+  - cron: '0 0 * * *'
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: [7.4, 8.0, 8.1]
+        dependency-version: [prefer-lowest, prefer-stable]
+
+    name: PHP${{ matrix.php }} - ${{ matrix.dependency-version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        extensions: mbstring
+
+    - name: Configure matchers
+      uses: mheap/phpunit-matcher-action@v1
+
+    - name: Install dependencies
+      run: |
+        composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --with-all-dependencies
+
+    - name: Execute Unit Tests
+      run: composer test
+#
+#    - name: Analyse with PHPStan
+#      run: composer analyse
+#
+#    - name: Check PSR-12 Codestyle
+#      run: composer test

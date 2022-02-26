@@ -380,6 +380,7 @@ class Driver extends elFinderVolumeDriver
     protected function _scandir($path)
     {
         $paths = array();
+
         foreach ($this->fs->listContents($path, false) as $object) {
             if ($object) {
                 $paths[] = $object['path'];
