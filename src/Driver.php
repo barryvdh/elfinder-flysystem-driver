@@ -7,9 +7,11 @@ use Intervention\Image\ImageManager;
 use League\Flysystem\Cached\CachedAdapter;
 use League\Flysystem\Cached\CacheInterface;
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\Cached\Storage\Memory as MemoryStore;
+use League\Flysystem\WhitespacePathNormalizer;
 use League\Glide\Urls\UrlBuilderFactory;
 use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
 use Barryvdh\elFinderFlysystemDriver\Cache\SessionStore;
@@ -30,11 +32,8 @@ class Driver extends elFinderVolumeDriver
      **/
     protected $driverId = 'fls';
 
-    /** @var FilesystemInterface $fs */
+    /** @var FilesystemOperator $fs */
     protected $fs;
-
-    /** @var CacheInterface $fs */
-    protected $fscache;
 
     /** @var UrlBuilder $urlBuilder */
     protected $urlBuilder = null;
@@ -72,16 +71,6 @@ class Driver extends elFinderVolumeDriver
         return parent::mount($opts);
     }
 
-    protected function clearcache()
-    {
-        parent::clearcache();
-
-        // clear cached adapter cache
-        if ($this->fscache) {
-            $this->fscache->flush();
-        }
-    }
-
     /**
      * Find the icon based on the used Adapter
      *
@@ -89,23 +78,7 @@ class Driver extends elFinderVolumeDriver
      */
     protected function getIcon()
     {
-        try {
-            $adapter = $this->fs->getAdapter();
-        } catch (\Exception $e) {
-            $adapter = null;
-        }
-
-        if ($adapter instanceof CachedAdapter) {
-            $adapter = $adapter->getAdapter();
-        }
-
-        if ($adapter instanceof League\Flysystem\Adapter\AbstractFtpAdapter) {
-            $icon = 'volume_icon_ftp.png';
-        } elseif ($adapter instanceof League\Flysystem\Dropbox\DropboxAdapter) {
-            $icon = 'volume_icon_dropbox.png';
-        } else {
-            $icon = 'volume_icon_local.png';
-        }
+        $icon = 'volume_icon_local.png';
 
         $parentUrl = defined('ELFINDER_IMG_PARENT_URL') ? (rtrim(ELFINDER_IMG_PARENT_URL, '/') . '/') : '';
         return $parentUrl . 'img/' . $icon;
@@ -120,39 +93,11 @@ class Driver extends elFinderVolumeDriver
     protected function init()
     {
         $this->fs = $this->options['filesystem'];
-        if (!($this->fs instanceof FilesystemInterface)) {
-            return $this->setError('A filesystem instance is required');
+        if (!($this->fs instanceof FilesystemOperator)) {
+            return $this->setError('A FilesystemOperator instance is required');
         }
 
-        if ($this->fs instanceof Filesystem) {
-            $adapter = $this->fs->getAdapter();
-
-            // If the Flysystem adapter already is a cache, try to determine the cache.
-            if ($adapter instanceof CachedAdapter) {
-                // Try to get the cache (method doesn't exist in all versions)
-                if (method_exists($adapter, 'getCache')) {
-                    $this->fscache = $adapter->getCache();
-                } elseif ($this->options['fscache'] instanceof CacheInterface) {
-                    $this->fscache = $this->options['fscache'];
-                }
-            } elseif ($this->options['cache']) {
-                switch ($this->options['cache']) {
-                    case 'session':
-                        $this->fscache = new SessionStore($this->session, 'fls_cache_' . $this->id);
-                        break;
-                    case 'memory':
-                        $this->fscache = new MemoryStore();
-                        break;
-                }
-
-                if ($this->fscache) {
-                    $adapter = new CachedAdapter($adapter, $this->fscache);
-                    $this->fs = new Filesystem($adapter, $this->fs->getConfig());
-                }
-            }
-        }
-
-        $this->fs->addPlugin(new GetUrl());
+//        $this->fs->addPlugin(new GetUrl());
 
         $this->options['icon'] = $this->options['icon'] ?: (empty($this->options['rootCssClass'])? $this->getIcon() : '');
         $this->root = $this->options['path'];
@@ -173,19 +118,6 @@ class Driver extends elFinderVolumeDriver
         return true;
     }
 
-    /**
-     * Configure after successful mount.
-     *
-     * @return void
-     **/
-    protected function configure()
-    {
-        parent::configure();
-
-        if ($this->fscache && $this->isMyReload()) {
-            $this->fscache->flush();
-        }
-    }
 
     /**
      * Return parent directory path
@@ -195,7 +127,7 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _dirname($path)
     {
-        return Util::dirname($path) ?: '/';
+        return dirname($path) ?: '/';
     }
 
     /**
@@ -278,8 +210,20 @@ class Driver extends elFinderVolumeDriver
         }
 
         try {
-            $meta = $this->fs->getMetadata($path);
+            $meta = [
+                'mimetype' => null,
+                'extension' => null,
+                'size' => null,
+                'type' => $this->fs->fileExists($path) ? 'file' : 'dir',
+            ];
+
+            if ($meta['type'] === 'file') {
+                $meta['mimetype'] = $this->fs->mimeType($path);
+                $meta['timestamp'] = $this->fs->lastModified($path);
+                $meta['size'] = $this->fs->fileSize($path);
+            }
         } catch (\Exception $e) {
+            var_dump($e->getMessage());
             return array();
         }
 
@@ -308,7 +252,7 @@ class Driver extends elFinderVolumeDriver
             if(isset($meta['mimetype'])) {
                 $stat['mime'] = $meta['mimetype'];
             } else {
-                $stat['mime'] = $this->fs->getMimetype($path);
+                $stat['mime'] = $this->fs->mimeType($path);
             }
 
             $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -325,9 +269,9 @@ class Driver extends elFinderVolumeDriver
             }
         }
 
-        if (!isset($stat['url']) && $this->fs->getUrl()) {
-            $stat['url'] = 1;
-        }
+//        if (!isset($stat['url']) && $this->fs->getUrl()) {
+//            $stat['url'] = 1;
+//        }
 
         return $stat;
     }
@@ -592,7 +536,7 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _joinPath($dir, $name)
     {
-        return Util::normalizePath($dir . $this->separator . $name);
+        return (new WhitespacePathNormalizer())->normalizePath($dir . $this->separator . $name);
     }
 
     /**
