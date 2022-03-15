@@ -58,11 +58,11 @@ class Driver extends elFinderVolumeDriver
     {
         $opts = array(
             'filesystem' => null,
+            'URLCallback' => null,
             'glideURL' => null,
             'glideKey' => null,
             'imageManager' => null,
             'cache' => 'session',   // 'session', 'memory' or false
-            'fscache' => null,      // The Flysystem cache
             'checkSubfolders' => false, // Disable for performance
         );
 
@@ -88,13 +88,13 @@ class Driver extends elFinderVolumeDriver
     }
 
     /**
-     * Find the icon based on the used Adapter
+     * Return the icon
      *
      * @return string
      */
     protected function getIcon()
     {
-        $icon = 'volume_icon_local.png';
+        $icon = 'volume_icon_ftp.png';
 
         $parentUrl = defined('ELFINDER_IMG_PARENT_URL') ? (rtrim(ELFINDER_IMG_PARENT_URL, '/') . '/') : '';
         return $parentUrl . 'img/' . $icon;
@@ -300,6 +300,10 @@ class Driver extends elFinderVolumeDriver
                     'fit' => $this->options['tmbCrop'] ? 'crop' : 'contain',
                 ]);
             }
+        }
+
+        if ($this->options['URLCallback'] && is_callable($this->options['URLCallback'])) {
+            $stat['url'] = $this->options['URLCallback']($path);
         }
 
         return $stat;
@@ -828,11 +832,17 @@ class Driver extends elFinderVolumeDriver
                 return $url;
             }
         }
+
         if (($file = $this->file($hash)) == false || !isset($file['url']) || !$file['url'] || $file['url'] == 1) {
             if ($file && !empty($file['url']) && !empty($options['temporary'])) {
                 return parent::getContentUrl($hash, $options);
             }
             $path = $this->decode($hash);
+
+            if ($this->options['URLCallback'] && is_callable($this->options['URLCallback'])) {
+                return $this->options['URLCallback']($path);
+            }
+
             return parent::getContentUrl($hash, $options);
         }
         return $file['url'];
