@@ -2,11 +2,9 @@
 
 namespace Barryvdh\elFinderFlysystemDriver\Tests;
 
-use Barryvdh\elFinderFlysystemDriver\Driver;
-use League\Flysystem\Adapter\Local;
+use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Memory\MemoryAdapter;
 
 class DriverTest extends TestCase
 {
@@ -17,11 +15,11 @@ class DriverTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
-        $adapter = new MemoryAdapter();
+        $adapter = new InMemoryFilesystemAdapter();
         $filesystem = new Filesystem($adapter);
 
         // Set a fake file
-        $filesystem->put('dir1/file1.txt', 'Hello!');
+        $filesystem->write('dir1/file1.txt', 'Hello!');
 
         $this->filesystem = $filesystem;
     }
