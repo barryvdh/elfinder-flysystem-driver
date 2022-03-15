@@ -6,8 +6,11 @@ use elFinderVolumeDriver;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Cached\CachedAdapter;
 use League\Flysystem\Cached\CacheInterface;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToCopyFile;
 use League\Flysystem\UnableToCreateDirectory;
 use League\Flysystem\UnableToDeleteDirectory;
@@ -43,6 +46,9 @@ class Driver extends elFinderVolumeDriver
     /** @var ImageManager $imageManager */
     protected $imageManager = null;
 
+    /** @var StorageAttributes $attributes */
+    protected $attributeCache = [];
+
     /**
      * Constructor
      * Extend options with required fields
@@ -61,6 +67,14 @@ class Driver extends elFinderVolumeDriver
         );
 
         $this->options = array_merge($this->options, $opts);
+    }
+
+    protected function clearcache()
+    {
+        parent::clearcache();
+
+        // clear cached attributes
+        $this->attributeCache = [];
     }
 
     public function mount(array $opts)
@@ -153,8 +167,9 @@ class Driver extends elFinderVolumeDriver
         $dir = $this->_dirname($path);
         $basename = basename($path);
 
-        foreach ($this->fs->listContents($dir)->toArray() as $meta) {
-            if ($meta && $meta['type'] !== 'file' && $meta['basename'] == $basename) {
+        /** @var StorageAttributes $meta */
+        foreach ($this->listContents($dir) as $attribute) {
+            if ($attribute->isDir() && $this->_basename($meta->path()) == $basename) {
                 return true;
             }
         }
@@ -198,33 +213,51 @@ class Driver extends elFinderVolumeDriver
             return $stat;
         }
 
-        // If not exists, return empty
-        if (!$this->fs->has($path)) {
+        if (isset($this->attributeCache[$path])) {
+            /** @var StorageAttributes $attributes */
+            $attributes = $this->attributeCache[$path];
 
-            // Check if the parent doesn't have this path
-            if ($this->_dirExists($path)) {
-                return $stat;
-            }
-
-            // Neither a file or directory exist, return empty
-            return array();
-        }
-
-        try {
             $meta = [
-                'mimetype' => null,
+                'mimetype' => $attributes->type(),
                 'extension' => null,
                 'size' => null,
-                'type' => $this->fs->fileExists($path) ? 'file' : 'dir',
+                'timestamp' => $attributes->lastModified(),
+                'type' => $attributes->isFile() ? 'file' : 'dir',
             ];
 
-            if ($meta['type'] === 'file') {
-                $meta['mimetype'] = $this->fs->mimeType($path);
-                $meta['timestamp'] = $this->fs->lastModified($path);
-                $meta['size'] = $this->fs->fileSize($path);
+            if ($attributes instanceof FileAttributes) {
+                $meta['mimetype'] = $attributes->mimeType();
+                $meta['size'] = $attributes->fileSize();
             }
-        } catch (\Exception $e) {
-            return array();
+        } else {
+            // If not exists, return empty
+            if (!$this->fs->has($path)) {
+
+                // Check if the parent doesn't have this path
+                if ($this->_dirExists($path)) {
+                    return $stat;
+                }
+
+                // Neither a file or directory exist, return empty
+                return array();
+            }
+
+            try {
+                $meta = [
+                    'mimetype' => null,
+                    'extension' => null,
+                    'size' => null,
+                    'type' => $this->fs->fileExists($path) ? 'file' : 'dir',
+                ];
+
+                if ($meta['type'] === 'file') {
+                    $meta['mimetype'] = $this->fs->mimeType($path);
+                    $meta['timestamp'] = $this->fs->lastModified($path);
+                    $meta['size'] = $this->fs->fileSize($path);
+                }
+            } catch (\Exception $e) {
+                return array();
+            }
         }
 
         if(false === $meta) {
@@ -252,7 +285,7 @@ class Driver extends elFinderVolumeDriver
             if(isset($meta['mimetype'])) {
                 $stat['mime'] = $meta['mimetype'];
             } else {
-                $stat['mime'] = $this->fs->mimeType($path);
+                $stat['mime'] = null;
             }
 
             $imgMimes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -272,6 +305,23 @@ class Driver extends elFinderVolumeDriver
         return $stat;
     }
 
+    /**
+     * @param $path
+     * @return array|StorageAttributes[]
+     * @throws \League\Flysystem\FilesystemException
+     */
+    protected function listContents($path): array
+    {
+        $contents = $this->fs->listContents($path)->toArray();
+
+        /** @var StorageAttributes $item */
+        foreach ($contents as $item) {
+            $this->attributeCache[$item['path']] = $item;
+        }
+
+        return $contents;
+    }
+
     /***************** file stat ********************/
 
     /**
@@ -282,11 +332,11 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _subdirs($path)
     {
-        $contents = $this->fs->listContents($path)->filter(function ($item) {
-            return $item['type'] == 'dir';
+        $contents = array_filter($this->listContents($path), function (StorageAttributes $item) {
+            return $item->isDir();
         });
 
-        return !empty($contents->toArray());
+        return !empty($contents);
     }
 
     /**
@@ -318,7 +368,7 @@ class Driver extends elFinderVolumeDriver
     {
         $paths = array();
 
-        foreach ($this->fs->listContents($path, false)->toArray() as $object) {
+        foreach ($this->listContents($path, false) as $object) {
             if ($object) {
                 $paths[] = $object['path'];
             }
@@ -542,7 +592,6 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _basename($path)
     {
-
         return basename($path);
     }
 
