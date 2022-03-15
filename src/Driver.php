@@ -58,6 +58,7 @@ class Driver extends elFinderVolumeDriver
     {
         $opts = array(
             'filesystem' => null,
+            'URLCallback' => null,
             'glideURL' => null,
             'glideKey' => null,
             'imageManager' => null,
