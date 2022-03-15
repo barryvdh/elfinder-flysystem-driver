@@ -8,14 +8,16 @@ use League\Flysystem\Cached\CachedAdapter;
 use League\Flysystem\Cached\CacheInterface;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\UnableToCopyFile;
+use League\Flysystem\UnableToCreateDirectory;
+use League\Flysystem\UnableToDeleteDirectory;
+use League\Flysystem\UnableToDeleteFile;
+use League\Flysystem\UnableToMoveFile;
+use League\Flysystem\UnableToWriteFile;
 use League\Flysystem\Util;
 use League\Flysystem\FilesystemInterface;
-use League\Flysystem\Cached\Storage\Memory as MemoryStore;
 use League\Flysystem\WhitespacePathNormalizer;
 use League\Glide\Urls\UrlBuilderFactory;
-use Barryvdh\elFinderFlysystemDriver\Plugin\GetUrl;
-use Barryvdh\elFinderFlysystemDriver\Cache\SessionStore;
-
 /**
  * elFinder driver for Flysytem (https://github.com/thephpleague/flysystem)
  *
@@ -97,8 +99,6 @@ class Driver extends elFinderVolumeDriver
             return $this->setError('A FilesystemOperator instance is required');
         }
 
-//        $this->fs->addPlugin(new GetUrl());
-
         $this->options['icon'] = $this->options['icon'] ?: (empty($this->options['rootCssClass'])? $this->getIcon() : '');
         $this->root = $this->options['path'];
 
@@ -127,7 +127,8 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _dirname($path)
     {
-        return dirname($path) ?: '/';
+        $dirname = dirname($path);
+        return  $dirname === '.' ? '/' : $dirname;
     }
 
     /**
@@ -152,7 +153,7 @@ class Driver extends elFinderVolumeDriver
         $dir = $this->_dirname($path);
         $basename = basename($path);
 
-        foreach ($this->fs->listContents($dir) as $meta) {
+        foreach ($this->fs->listContents($dir)->toArray() as $meta) {
             if ($meta && $meta['type'] !== 'file' && $meta['basename'] == $basename) {
                 return true;
             }
@@ -223,7 +224,6 @@ class Driver extends elFinderVolumeDriver
                 $meta['size'] = $this->fs->fileSize($path);
             }
         } catch (\Exception $e) {
-            var_dump($e->getMessage());
             return array();
         }
 
@@ -269,10 +269,6 @@ class Driver extends elFinderVolumeDriver
             }
         }
 
-//        if (!isset($stat['url']) && $this->fs->getUrl()) {
-//            $stat['url'] = 1;
-//        }
-
         return $stat;
     }
 
@@ -286,14 +282,11 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _subdirs($path)
     {
-        $contents = $this->fs->listContents($path);
-
-        $filter = function ($item) {
+        $contents = $this->fs->listContents($path)->filter(function ($item) {
             return $item['type'] == 'dir';
-        };
+        });
 
-        $dirs = array_filter($contents, $filter);
-        return !empty($dirs);
+        return !empty($contents->toArray());
     }
 
     /**
@@ -325,7 +318,7 @@ class Driver extends elFinderVolumeDriver
     {
         $paths = array();
 
-        foreach ($this->fs->listContents($path, false) as $object) {
+        foreach ($this->fs->listContents($path, false)->toArray() as $object) {
             if ($object) {
                 $paths[] = $object['path'];
             }
@@ -370,7 +363,9 @@ class Driver extends elFinderVolumeDriver
     {
         $path = $this->_joinPath($path, $name);
 
-        if ($this->fs->createDir($path) === false) {
+        try {
+            $this->fs->createDirectory($path);
+        } catch (UnableToCreateDirectory $e) {
             return false;
         }
 
@@ -388,7 +383,9 @@ class Driver extends elFinderVolumeDriver
     {
         $path = $this->_joinPath($path, $name);
 
-        if ($this->fs->write($path, '') === false) {
+        try {
+            $this->fs->write($path, '');
+        } catch (UnableToWriteFile $e) {
             return false;
         }
 
@@ -407,7 +404,9 @@ class Driver extends elFinderVolumeDriver
     {
         $path = $this->_joinPath($target, $name);
 
-        if ($this->fs->copy($source, $path) === false) {
+        try {
+            $this->fs->copy($source, $path);
+        } catch (UnableToCopyFile $e) {
             return false;
         }
 
@@ -427,7 +426,9 @@ class Driver extends elFinderVolumeDriver
     {
         $path = $this->_joinPath($target, $name);
 
-        if ($this->fs->rename($source, $path) === false) {
+        try {
+            $this->fs->move($source, $path);
+        } catch (UnableToMoveFile $e) {
             return false;
         }
 
@@ -442,7 +443,13 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _unlink($path)
     {
-        return $this->fs->delete($path);
+        try {
+            $this->fs->delete($path);
+        } catch (UnableToDeleteFile $e) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -453,7 +460,13 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _rmdir($path)
     {
-        return $this->fs->deleteDir($path);
+        try {
+            $this->fs->deleteDirectory($path);
+        } catch (UnableToDeleteDirectory $e) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -480,7 +493,9 @@ class Driver extends elFinderVolumeDriver
             $config['visibility'] = $this->options['visibility'];
         }
 
-        if ($this->fs->putStream($path, $fp, $config) === false) {
+        try {
+            $this->fs->writeStream($path, $fp, $config);
+        } catch (UnableToWriteFile $e) {
             return false;
         }
 
@@ -507,7 +522,12 @@ class Driver extends elFinderVolumeDriver
      **/
     protected function _filePutContents($path, $content)
     {
-        return $this->fs->put($path, $content);
+        try {
+            $this->fs->write($path, $content);
+        } catch (UnableToWriteFile $e) {
+            return false;
+        }
+        return true;
     }
 
     /*********************** paths/urls *************************/
@@ -764,11 +784,7 @@ class Driver extends elFinderVolumeDriver
                 return parent::getContentUrl($hash, $options);
             }
             $path = $this->decode($hash);
-            if (($res = $this->fs->getUrl($path)) || empty($options['temporary'])) {
-                return $res;
-            } else {
-                return parent::getContentUrl($hash, $options);
-            }
+            return parent::getContentUrl($hash, $options);
         }
         return $file['url'];
     }
