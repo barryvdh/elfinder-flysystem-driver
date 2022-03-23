@@ -169,7 +169,7 @@ class Driver extends elFinderVolumeDriver
 
         /** @var StorageAttributes $meta */
         foreach ($this->listContents($dir) as $attribute) {
-            if ($attribute->isDir() && $this->_basename($meta->path()) == $basename) {
+            if ($attribute->isDir() && $this->_basename($attribute->path()) == $basename) {
                 return true;
             }
         }
