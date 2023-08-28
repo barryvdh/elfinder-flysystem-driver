@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "studio-42/elfinder": "^2.1.60",
+        "studio-42/elfinder": "^2.1.62",
         "league/flysystem": "^3",
         "intervention/image": "^2.0"
     },
