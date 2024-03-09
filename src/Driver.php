@@ -3,6 +3,7 @@
 namespace Barryvdh\elFinderFlysystemDriver;
 
 use elFinderVolumeDriver;
+use Intervention\Image\Encoders\AutoEncoder;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Cached\CachedAdapter;
 use League\Flysystem\Cached\CacheInterface;
@@ -754,15 +755,13 @@ class Driver extends elFinderVolumeDriver
             return $this->setError(elFinder::ERROR_UNSUPPORT_TYPE);
         }
 
-        if (!$image = $this->imageManager->make($this->_getContents($path))) {
+        if (!$image = $this->imageManager->read($this->_getContents($path))) {
             return false;
         }
 
         switch ($mode) {
             case 'propresize':
-                $image->resize($width, $height, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
+                $image->scale($width, $height);
                 break;
 
             case 'crop':
@@ -770,7 +769,7 @@ class Driver extends elFinderVolumeDriver
                 break;
 
             case 'fitsquare':
-                $image->fit($width, $height, null, 'center');
+                $image->cover($width, $height, 'center');
                 break;
 
             case 'rotate':
@@ -782,10 +781,10 @@ class Driver extends elFinderVolumeDriver
                 break;
         }
 
-        if ($jpgQuality && $image->mime() === 'image/jpeg') {
-            $result = (string)$image->encode('jpg', $jpgQuality);
+        if ($jpgQuality) {
+            $result = $image->encode(new AutoEncoder(quality: $jpgQuality))->toString();
         } else {
-            $result = (string)$image->encode();
+            $result = $image->encode()->toString();
         }
         if ($result && $this->_filePutContents($path, $result)) {
             $this->rmTmb($file);
