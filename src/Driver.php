@@ -124,7 +124,7 @@ class Driver extends elFinderVolumeDriver
         if ($this->options['imageManager']) {
             $this->imageManager = $this->options['imageManager'];
         } else {
-            $this->imageManager = new ImageManager();
+            $this->imageManager = ImageManager::gd();
         }
 
         // enable command archive
