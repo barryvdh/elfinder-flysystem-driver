@@ -5,11 +5,7 @@ namespace Barryvdh\elFinderFlysystemDriver;
 use elFinderVolumeDriver;
 use Intervention\Image\Encoders\AutoEncoder;
 use Intervention\Image\ImageManager;
-use League\Flysystem\Cached\CachedAdapter;
-use League\Flysystem\Cached\CacheInterface;
-use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\StorageAttributes;
 use League\Flysystem\UnableToCopyFile;
@@ -18,10 +14,9 @@ use League\Flysystem\UnableToDeleteDirectory;
 use League\Flysystem\UnableToDeleteFile;
 use League\Flysystem\UnableToMoveFile;
 use League\Flysystem\UnableToWriteFile;
-use League\Flysystem\Util;
-use League\Flysystem\FilesystemInterface;
 use League\Flysystem\WhitespacePathNormalizer;
 use League\Glide\Urls\UrlBuilderFactory;
+
 /**
  * elFinder driver for Flysytem (https://github.com/thephpleague/flysystem)
  *
