@@ -24,7 +24,6 @@ class DriverTest extends TestCase
         $this->filesystem = $filesystem;
     }
 
-
     public function testScanDirRoot()
     {
         $driver = new TestDriver();
@@ -79,4 +78,25 @@ class DriverTest extends TestCase
         $this->assertEquals('Hello!', $content);
     }
 
+    public function testResize()
+    {
+        $driver = new TestDriver();
+        $driver->mount([
+            'path' => '/',
+            'filesystem' => $this->filesystem,
+        ]);
+
+        // see https://upload.wikimedia.org/wikipedia/commons/e/e1/White_Pixel_1x1.jpg
+        $this->filesystem->write('dir1/file1.jpeg', base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wgARCAABAAEDAREAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhADEAAAAX8P/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABAf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k='));
+
+        $this->assertEmpty($driver->error(), implode(', ', $driver->error()));
+
+        $result = $driver->resize($driver->encode('dir1/file1.jpeg'), 10, 10, 0, 0);
+
+        $this->assertEmpty($driver->error(), implode(', ', $driver->error()));
+        $this->assertEquals('file1.jpeg', $result['name']);
+        $this->assertEquals('image/jpeg', $result['mime']);
+        $this->assertEquals(10, $result['height']);
+        $this->assertEquals(10, $result['width']);
+    }
 }
