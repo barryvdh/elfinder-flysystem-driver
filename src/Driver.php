@@ -4,6 +4,7 @@ namespace Barryvdh\elFinderFlysystemDriver;
 
 use elFinderVolumeDriver;
 use Intervention\Image\Encoders\AutoEncoder;
+use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemOperator;
@@ -724,7 +725,7 @@ class Driver extends elFinderVolumeDriver
      * @param  string $mode action how to mainpulate image
      * @param  string $bg background color
      * @param  int $degree rotete degree
-     * @param  int $jpgQuality JEPG quality (1-100)
+     * @param  int $jpgQuality JPEG quality (1-100)
      * @return array|false
      * @author Dmitry (dio) Levashov
      * @author Alexey Sukhotin
@@ -777,9 +778,9 @@ class Driver extends elFinderVolumeDriver
         }
 
         if ($jpgQuality) {
-            $result = $image->encode(new AutoEncoder(quality: $jpgQuality))->toString();
+            $result = $image->encode(new JpegEncoder(quality: $jpgQuality))->toString();
         } else {
-            $result = $image->encode()->toString();
+            $result = $image->encode(new AutoEncoder())->toString();
         }
         if ($result && $this->_filePutContents($path, $result)) {
             $this->rmTmb($file);
