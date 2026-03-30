@@ -25,7 +25,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        composer update --prefer-dist --no-interaction --no-suggest --with-all-dependencies
+        composer update --prefer-dist --no-interaction --with-all-dependencies
 
     - name: Check Code Coverage
       run: vendor/bin/phpunit --verbose --coverage-text --coverage-clover=clover.xml --coverage-html=coverage
