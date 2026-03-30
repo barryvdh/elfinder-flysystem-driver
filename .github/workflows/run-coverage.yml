@@ -3,8 +3,6 @@ name: Code Coverage
 on:
   push:
   pull_request:
-  schedule:
-  - cron: '0 0 * * *'
 
 jobs:
   php-tests:
@@ -28,7 +26,7 @@ jobs:
         composer update --prefer-dist --no-interaction --with-all-dependencies
 
     - name: Check Code Coverage
-      run: vendor/bin/phpunit --verbose --coverage-text --coverage-clover=clover.xml --coverage-html=coverage
+      run: vendor/bin/phpunit --coverage-text --coverage-clover=clover.xml --coverage-html=coverage
 
     - uses: actions/upload-artifact@v7
       with:
