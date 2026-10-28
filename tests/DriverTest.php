@@ -78,6 +78,38 @@ class DriverTest extends TestCase
         $this->assertEquals('Hello!', $content);
     }
 
+    public function testContentUrlPreservesPathRelativeToFilesystemRoot(): void
+    {
+        $driver = new TestDriver();
+        $driver->mount([
+            'path' => '',
+            'URL' => 'https://example.com/files',
+            'filesystem' => $this->filesystem,
+        ]);
+
+        $this->assertEmpty($driver->error(), implode(', ', $driver->error()));
+
+        $url = $driver->getContentUrl($driver->encode('dir1/file1.txt'));
+
+        $this->assertEquals('https://example.com/files/dir1/file1.txt', $url);
+    }
+
+    public function testContentUrlRemainsRelativeToConfiguredPath(): void
+    {
+        $driver = new TestDriver();
+        $driver->mount([
+            'path' => 'dir1',
+            'URL' => 'https://example.com/files',
+            'filesystem' => $this->filesystem,
+        ]);
+
+        $this->assertEmpty($driver->error(), implode(', ', $driver->error()));
+
+        $url = $driver->getContentUrl($driver->encode('dir1/file1.txt'));
+
+        $this->assertEquals('https://example.com/files/file1.txt', $url);
+    }
+
     public function testResize()
     {
         $driver = new TestDriver();
