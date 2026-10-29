@@ -841,8 +841,37 @@ class Driver extends elFinderVolumeDriver
                 return $this->options['URLCallback']($path);
             }
 
+            if ($this->URL) {
+                return $this->getFlysystemUrl($path);
+            }
+
             return parent::getContentUrl($hash, $options);
         }
         return $file['url'];
+    }
+
+    /**
+     * Build a public URL from a Flysystem path.
+     */
+    protected function getFlysystemUrl(string $path): string
+    {
+        $path = ltrim(str_replace($this->separator, '/', $path), '/');
+        $root = trim(str_replace($this->separator, '/', $this->root), '/');
+
+        if ($root !== '') {
+            if ($path === $root) {
+                $path = '';
+            } elseif (str_starts_with($path, $root . '/')) {
+                $path = substr($path, strlen($root) + 1);
+            }
+        }
+
+        if ($this->encoding) {
+            $path = $this->convEncIn($path, true);
+        }
+
+        $path = str_replace('%2F', '/', rawurlencode($path));
+
+        return rtrim($this->URL, '/') . '/' . $path;
     }
 }
